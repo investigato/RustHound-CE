@@ -119,7 +119,8 @@ impl Computer {
         }
 
         // Computer structure
-        let mut computer = Computer::new();
+        // not needed, hides attributes that are assigned to it
+        // let mut computer = Computer::new();
 
         // Change all values...
         self.properties.domain = domain.to_uppercase();
@@ -257,7 +258,7 @@ impl Computer {
                 }
                 // LAPS Legacy
                 "ms-Mcs-AdmPwd" => {
-                    // Laps is set, random password for local adminsitrator
+                    // Laps is set, random password for local administrator
                     // https://github.com/BloodHoundAD/SharpHound3/blob/7615860d963ba70751e1e5a00e02bb3fbca154c6/SharpHound3/Tasks/ACLTasks.cs#L313
                     info!(
                         "Your user can read LAPS password on {}: {}",
@@ -267,13 +268,14 @@ impl Computer {
                     self.properties.haslaps = true;
                 }
                 "ms-Mcs-AdmPwdExpirationTime" => {
-                    // LAPS is set, random password for local adminsitrator
+                    // LAPS is set, random password for local administrator
                     self.properties.haslaps = true;
                 }
                 // New LAPS attributes
+                // https://learn.microsoft.com/en-us/windows-server/identity/laps/laps-technical-reference
                 "msLAPS-Password" => {
                     info!(
-                        "Your user can read LAPS password on {}: {:?}",
+                        "Your user can read LAPS v2 passwords on {}: {:?}",
                         &result_attrs["name"][0].yellow().bold(),
                         &value[0].yellow().bold()
                     );
@@ -281,13 +283,27 @@ impl Computer {
                 }
                 "msLAPS-EncryptedPassword" => {
                     info!(
-                        "Your user can read uncrypted LAPS password on {} please check manually to decrypt it!",
+                        "Your user can decrypt LAPS v2 passwords on {} please check manually to decrypt it!",
                         &result_attrs["name"][0].yellow().bold()
                     );
                     self.properties.haslaps = true;
                 }
                 "msLAPS-PasswordExpirationTime" => {
-                    // LAPS is set, random password for local adminsitrator
+                    // LAPS is set, random password for local administrator
+                    self.properties.haslaps = true;
+                }
+                "msLAPS-EncryptedPasswordHistory" => {
+                    info!(
+                        "Your user can read decrypted LAPS v2 password history on {} please check manually to decrypt it!",
+                        &result_attrs["name"][0].yellow().bold()
+                    );
+                    self.properties.haslaps = true;
+                }
+                "msLAPS-EncryptedDSRMPassword" => {
+                    info!(
+                        "Your user can read decrypted LAPS v2 DSRM password on {} please check manually to decrypt it!",
+                        &result_attrs["name"][0].yellow().bold()
+                    );
                     self.properties.haslaps = true;
                 }
                 "primaryGroupID" => {
@@ -318,7 +334,7 @@ impl Computer {
                 "nTSecurityDescriptor" => {
                     // nTSecurityDescriptor raw to string
                     let relations_ace = parse_ntsecuritydescriptor(
-                        &mut computer,
+                        self,
                         &value[0],
                         "Computer",
                         &result_attrs,
@@ -331,7 +347,7 @@ impl Computer {
                     // RBCD (Resource-based constrained)
                     // msDS-AllowedToActOnBehalfOfOtherIdentity parsing ACEs
                     let relations_ace = parse_ntsecuritydescriptor(
-                        &mut computer,
+                        self,
                         &value[0],
                         "Computer",
                         &result_attrs,

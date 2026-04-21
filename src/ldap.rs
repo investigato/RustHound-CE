@@ -114,12 +114,20 @@ pub async fn ldap_search<S: Storage<LdapSearchEntry>>(
         for cn in &res {
             // Set control LDAP_SERVER_SD_FLAGS_OID to get nTSecurityDescriptor
             // https://ldapwiki.com/wiki/LDAP_SERVER_SD_FLAGS_OID
-            let ctrls = RawControl {
+            let sec_desc_flag_ctrl = RawControl {
                 ctype: String::from("1.2.840.113556.1.4.801"),
                 crit: true,
                 val: Some(vec![48, 3, 2, 1, 5]),
             };
-            ldap.with_controls(ctrls.to_owned());
+            // Setting control flag LDAP_SERVER_SHOW_DELETED_OID to include tombstoned objects
+            // Required for ReanimateTombstones parsing
+            let show_deleted_ctrl=RawControl {
+                ctype:String::from("1.2.840.113556.1.4.417"),
+                crit:false,
+                val: None,
+            };
+            ldap.with_controls(vec![sec_desc_flag_ctrl.to_owned(),show_deleted_ctrl.to_owned()]);
+            // ldap.with_controls(ctrls.to_owned());
 
             // Prepare filter
             // let mut _s_filter: &str = "";
@@ -139,7 +147,7 @@ pub async fn ldap_search<S: Storage<LdapSearchEntry>>(
                 Box::new(PagedResults::new(999)),
             ];
 
-            // Streaming search with adaptaters and filters
+            // Streaming search with adapters and filters
             let mut search = ldap
                 .streaming_search_with(
                     adapters, // Adapter which fetches Search results with a Paged Results control.

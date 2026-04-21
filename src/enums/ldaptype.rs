@@ -17,8 +17,9 @@ pub enum Type {
     EnterpriseCA,
     AIACA,
     CertTemplate,
-    IssuancePolicie,
-    Unknown
+    IssuancePolicy,
+    Unknown,
+    SchemaEntry
 }
 
 /// Get object type, like ("user","group","computer","ou", "container", "gpo", "domain" "trust").
@@ -63,6 +64,9 @@ pub fn get_type(result: &SearchEntry) -> std::result::Result<Type, Type> {
                 && !contains(vals, "groupPolicyContainer") => {
                 return Ok(Type::Container);
             }
+            _ if contains(vals, "attributeSchema") || contains(vals, "classSchema") => {
+                return Ok(Type::SchemaEntry);
+            }
             _ if contains(vals, "trustedDomain") => {
                 return Ok(Type::Trust);
             }
@@ -90,7 +94,7 @@ pub fn get_type(result: &SearchEntry) -> std::result::Result<Type, Type> {
                 && result.dn.contains(DirectoryPaths::ISSUANCE_LOCATION) => {
                 if let Some(flags) = flags_vals {
                     if contains(flags, "2") {
-                        return Ok(Type::IssuancePolicie);
+                        return Ok(Type::IssuancePolicy);
                     }
                 }
             }
@@ -112,4 +116,5 @@ impl DirectoryPaths {
     pub const PKI_LOCATION              : &'static str = "CN=Public Key Services,CN=Services,CN=Configuration";
     pub const CONFIG_LOCATION           : &'static str = "CN=Configuration";
     pub const ISSUANCE_LOCATION         : &'static str = "CN=OID,CN=Public Key Services,CN=Services,CN=Configuration";
+    pub const SCHEMA_LOCATION: &'static str = "CN=Schema,CN=Configuration";
 }

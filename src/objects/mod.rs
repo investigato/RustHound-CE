@@ -36,3 +36,4 @@ pub mod rootca;
 pub mod enterpriseca;
 pub mod certtemplate;
 pub mod issuancepolicy;
+pub mod attribute;
