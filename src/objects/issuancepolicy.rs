@@ -9,11 +9,11 @@ use crate::enums::{decode_guid_le, parse_ntsecuritydescriptor};
 use crate::utils::date::string_to_epoch;
 use crate::objects::common::{LdapObject, AceTemplate, SPNTarget, Link, Member};
 
-/// IssuancePolicie structure
+/// IssuancePolicy structure
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct IssuancePolicie {
+pub struct IssuancePolicy {
     #[serde(rename = "Properties")]
-    properties: IssuancePolicieProperties,
+    properties: IssuancePolicyProperties,
     #[serde(rename = "GroupLink")]
     group_link: GroupLink,
     #[serde(rename = "Aces")]
@@ -28,15 +28,15 @@ pub struct IssuancePolicie {
     contained_by: Option<Member>,
 }
 
-impl IssuancePolicie {
-    // New IssuancePolicie
+impl IssuancePolicy {
+    // New IssuancePolicy
     pub fn new() -> Self { 
         Self {
             ..Default::default() 
         } 
     }
 
-    /// Function to parse and replace value in json template for IssuancePolicie object.
+    /// Function to parse and replace value in json template for IssuancePolicy object.
     pub fn parse(
          &mut self,
         result: SearchEntry,
@@ -50,7 +50,7 @@ impl IssuancePolicie {
         let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
 
         // Debug for current object
-        debug!("Parse IssuancePolicie: {result_dn}");
+        debug!("Parse IssuancePolicy: {result_dn}");
 
         // Trace all result attributes
         for (key, value) in &result_attrs {
@@ -105,7 +105,7 @@ impl IssuancePolicie {
                     let relations_ace = parse_ntsecuritydescriptor(
                         self,
                          &value[0],
-                        "IssuancePolicie",
+                        "IssuancePolicy",
                          &result_attrs,
                          &result_bin,
                          domain,
@@ -125,17 +125,17 @@ impl IssuancePolicie {
             // Push DN and Type
             sid_type.insert(
                 self.object_identifier.to_owned(),
-                "IssuancePolicie".to_string()
+                "IssuancePolicy".to_string()
             );
         }
 
-        // Trace and return IssuancePolicie struct
+        // Trace and return IssuancePolicy struct
         // trace!("JSON OUTPUT: {:?}",serde_json::to_string(&self).unwrap());
         Ok(())
     }
 }
 
-impl LdapObject for IssuancePolicie {
+impl LdapObject for IssuancePolicy {
     // To JSON
     fn to_json(&self) -> Value {
         serde_json::to_value(self).unwrap()
@@ -207,9 +207,9 @@ impl LdapObject for IssuancePolicie {
 }
 
 
-// IssuancePolicie properties structure
+// IssuancePolicy properties structure
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct IssuancePolicieProperties {
+pub struct IssuancePolicyProperties {
     domain: String,
     name: String,
     distinguishedname: String,
@@ -221,9 +221,9 @@ pub struct IssuancePolicieProperties {
     certtemplateoid: String,
 }
 
-impl Default for IssuancePolicieProperties {
-    fn default() -> IssuancePolicieProperties {
-        IssuancePolicieProperties {
+impl Default for IssuancePolicyProperties {
+    fn default() -> IssuancePolicyProperties {
+        IssuancePolicyProperties {
             domain: String::from(""),
             name: String::from(""),
             distinguishedname: String::from(""),

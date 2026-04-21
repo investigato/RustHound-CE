@@ -8,7 +8,7 @@ use crate::{
         checker::check_all_result,
     }, 
     objects::{
-        aiaca::AIACA, certtemplate::CertTemplate, common::parse_unknown, computer::Computer, container::Container, domain::Domain, enterpriseca::EnterpriseCA, fsp::Fsp, gpo::Gpo, group::Group, inssuancepolicie::IssuancePolicie, ntauthstore::NtAuthStore, ou::Ou, rootca::RootCA, trust::Trust, user::User
+        aiaca::AIACA, certtemplate::CertTemplate, common::parse_unknown, computer::Computer, container::Container, domain::Domain, enterpriseca::EnterpriseCA, fsp::Fsp, gpo::Gpo, group::Group, issuancepolicy::IssuancePolicy, ntauthstore::NtAuthStore, ou::Ou, rootca::RootCA, trust::Trust, user::User
     }, 
     storage::{EntrySource}
 };
@@ -29,7 +29,7 @@ pub struct ADResults {
     pub rootcas: Vec<RootCA>,
     pub enterprisecas: Vec<EnterpriseCA>,
     pub certtemplates: Vec<CertTemplate>,
-    pub issuancepolicies: Vec<IssuancePolicie>,
+    pub issuancepolicies: Vec<IssuancePolicy>,
 
     pub mappings: DomainMappings,
 }
@@ -207,7 +207,7 @@ pub fn parse_result_type_from_source(
                 results.certtemplates.push(cert_template);
             }
             Type::IssuancePolicie => {
-                let mut issuance_policie = IssuancePolicie::new();
+                let mut issuance_policie = IssuancePolicy::new();
                 issuance_policie.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
                 results.issuancepolicies.push(issuance_policie);
             }

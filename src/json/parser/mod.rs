@@ -18,7 +18,7 @@ use crate::objects::{
     rootca::RootCA,
     enterpriseca::EnterpriseCA,
     certtemplate::CertTemplate,
-    inssuancepolicie::IssuancePolicie,
+    issuancepolicy::IssuancePolicy,
 };
 use std::convert::TryInto;
 
@@ -48,7 +48,7 @@ pub fn parse_result_type(
     vec_rootcas:            &mut Vec<RootCA>,
     vec_enterprisecas:      &mut Vec<EnterpriseCA>,
     vec_certtemplates:      &mut Vec<CertTemplate>,
-    vec_issuancepolicies:   &mut Vec<IssuancePolicie>,
+    vec_issuancepolicies:   &mut Vec<IssuancePolicy>,
 
     dn_sid:             &mut HashMap<String, String>,
     sid_type:           &mut HashMap<String, String>,
@@ -240,7 +240,7 @@ pub fn parse_result_type(
                 vec_certtemplates.push(cert_template);
             }
             Type::IssuancePolicie => {
-                let mut issuance_policie = IssuancePolicie::new();
+                let mut issuance_policie = IssuancePolicy::new();
                 issuance_policie.parse(
                     cloneresult,
                     domain,

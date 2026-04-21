@@ -19,7 +19,7 @@ use crate::objects::{
     rootca::RootCA,
     enterpriseca::EnterpriseCA,
     certtemplate::CertTemplate,
-    inssuancepolicie::IssuancePolicie,
+    issuancepolicy::IssuancePolicy,
 };
 pub mod common;
 
@@ -40,7 +40,7 @@ pub fn check_all_result(
     vec_rootcas:             &mut [RootCA],
     vec_enterprisecas:       &mut [EnterpriseCA],
     vec_certtemplates:       &mut [CertTemplate],
-    vec_issuancepolicies:    &mut [IssuancePolicie],
+    vec_issuancepolicies:    &mut [IssuancePolicy],
     dn_sid:                  &HashMap<String, String>,
     sid_type:                &HashMap<String, String>,
     fqdn_sid:                &HashMap<String, String>,
