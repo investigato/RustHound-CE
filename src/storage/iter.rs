@@ -13,7 +13,7 @@ pub struct BincodeIterator<T, R: Read> {
 
 impl<T> BincodeIterator<T, BufReader<File>>
 where
-    T: bincode::Decode<()>,
+    T: oxicode::Decode<()>,
 {
     /// Create a new iterator from a file path
     pub fn from_path(file_path: impl AsRef<std::path::Path>) -> std::io::Result<Self> {
@@ -35,7 +35,7 @@ where
 
 impl<T, R: Read> BincodeIterator<T, R>
 where
-    T: bincode::Decode<()>,
+    T: oxicode::Decode<()>,
 {
     /// Create a new iterator from any reader
     pub fn new(reader: R) -> Self {
@@ -48,7 +48,7 @@ where
 
 impl<T, R: Read> Iterator for BincodeIterator<T, R>
 where
-    T: bincode::Decode<()>,
+    T: oxicode::Decode<()>,
 {
     type Item = Result<T, Box<dyn Error>>;
 
@@ -82,7 +82,7 @@ where
         }
 
         // Decode the item
-        match bincode::decode_from_slice::<T, _>(&data, bincode::config::standard()) {
+        match oxicode::decode_from_slice::<T>(&data) {
             Ok((item, _)) => Some(Ok(item)),
             Err(e) => Some(Err(format!("Failed to decode item: {e:?}").into())),
         }

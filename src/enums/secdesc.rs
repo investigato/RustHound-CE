@@ -5,7 +5,7 @@ use nom7::bytes::streaming::take;
 use nom7::combinator::cond;
 use nom7::multi::count;
 use nom7::IResult;
-
+use nom7::Parser;
 // https://github.com/fox-it/dissect.cstruct/blob/master/examples/secdesc.py
 // http://www.selfadsi.org/deep-inside/ad-security-descriptors.htm#SecurityDescriptorStructure
 // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/20233ed8-a6c6-4097-aafa-dd545ed24428?redirectedfrom=MSDN
@@ -83,7 +83,7 @@ impl LdapSid {
         let (i, revision) = le_u8(i)?;
         let (i, sub_authority_count) = le_u8(i)?;
         let (i, identifier_authority) = LdapSidIdentifiedAuthority::parse(i)?;
-        let (i, sub_authority) = count(le_u32, sub_authority_count as usize)(i)?;
+        let (i, sub_authority) = count(le_u32, sub_authority_count as usize).parse(i)?;
 
         let ldap_sid = LdapSid {
             revision,
@@ -116,7 +116,7 @@ impl Acl {
         let (i, acl_size) = le_u16(i)?;
         let (i, ace_count) = le_u16(i)?;
         let (i, sbz2) = le_u16(i)?;
-        let (i, data) = count(Ace::parse, ace_count as usize)(i)?;
+        let (i, data) = count(Ace::parse, ace_count as usize).parse(i)?;
 
         let acl = Acl {
             acl_revision,
@@ -276,8 +276,8 @@ impl AccessAllowedObjectAce {
     {
         let (i, mask) = le_u32(i)?;
         let (i, flags) = ObjectAceFlags::parse(i)?;
-        let (i, object_type) = cond(flags.contains(ObjectAceFlags::ACE_OBJECT_PRESENT),le_u128)(i)?;
-        let (i, inherited_object_type) = cond(flags.contains(ObjectAceFlags::ACE_INHERITED_OBJECT_PRESENT),le_u128)(i)?;
+        let (i, object_type) = cond(flags.contains(ObjectAceFlags::ACE_OBJECT_PRESENT),le_u128).parse(i)?;
+        let (i, inherited_object_type) = cond(flags.contains(ObjectAceFlags::ACE_INHERITED_OBJECT_PRESENT),le_u128).parse(i)?;
         let (i, sid) = LdapSid::parse(i)?;
 
         let access_allowed_object_ace = AccessAllowedObjectAce {

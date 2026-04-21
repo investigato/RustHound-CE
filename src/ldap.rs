@@ -25,7 +25,7 @@ use std::io::{self, Write, stdin};
 use std::collections::HashMap;
 use std::error::Error;
 use std::process;
-
+use oxicode::{Decode, Encode};
 /// Function to request all AD values.
 #[allow(clippy::too_many_arguments)]
 pub async fn ldap_search<S: Storage<LdapSearchEntry>>(
@@ -426,7 +426,7 @@ pub async fn get_all_naming_contexts(
 }
 
 // New type to implement Serialize and Deserialize for SearchEntry
-#[derive(Debug, Clone, bincode::Encode, bincode::Decode)]
+#[derive(Debug, Clone, Encode, Decode)]
 pub struct LdapSearchEntry {
     /// Entry DN.
     pub dn: String,
