@@ -6,12 +6,9 @@ use crate::enums::constants::*;
 use crate::enums::schema_guids::*;
 use crate::enums::secdesc::*;
 use crate::enums::sid::sid_maker;
-use crate::{
-    enums::decode_guid_le,
-    objects::{
-        common::{AceTemplate, LdapObject},
-        user::User,
-    },
+use crate::objects::{
+    common::{AceTemplate, LdapObject},
+    user::User,
 };
 use bitflags::bitflags;
 use log::{error, trace};
@@ -186,9 +183,8 @@ fn ace_maker<T: LdapObject>(
                 // if not ace_applies(ace_object.acedata.get_inherited_object_type().lower(), entrytype, objecttype_guid_map):
                 // continue
                 // https://github.com/fox-it/BloodHound.py/blob/645082e3462c93f31b571db945cde1fd7b837fb9/bloodhound/enumeration/acls.py#L85
-                let ace_guid =
-                    decode_guid_le(inherited_object_type.to_le_bytes().as_ref()).to_lowercase();
-                if !(ace_applies(&ace_guid, entry_type)) {
+                let ace_guid = inherited_object_type;
+                if !ace_applies(&ace_guid, entry_type) {
                     continue;
                 }
             }
@@ -199,7 +195,7 @@ fn ace_maker<T: LdapObject>(
             };
             trace!("ACE MASK for ACETYPE 0x05: {:?}", mask);
 
-            let ace_guid = decode_guid_le(object_type.to_le_bytes().as_ref()).to_lowercase();
+            let ace_guid = object_type;
             trace!("ACE GUID for ACETYPE 0x05: {:?}", ace_guid);
 
             // https://github.com/fox-it/BloodHound.py/blob/645082e3462c93f31b571db945cde1fd7b837fb9/bloodhound/enumeration/acls.py#L92
@@ -211,8 +207,7 @@ fn ace_maker<T: LdapObject>(
                 trace!(
                     "ACE MASK contain: GENERIC_ALL or WRITE_DACL or WRITE_OWNER or GENERIC_WRITE"
                 );
-                let inherited_ace_guid =
-                    decode_guid_le(inherited_object_type.to_le_bytes().as_ref()).to_lowercase();
+                let inherited_ace_guid = inherited_object_type;
                 if flags & ACE_INHERITED_OBJECT_TYPE_PRESENT == ACE_INHERITED_OBJECT_TYPE_PRESENT
                     && !ace_applies(&inherited_ace_guid, entry_type)
                 {
@@ -222,10 +217,10 @@ fn ace_maker<T: LdapObject>(
                     if entry_type == "Computer"
                         && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
                         && object.get_haslaps().to_owned()
-                        && &ace_guid
-                        == get_schema_map()
-                        .get("ms-mcs-admpwd")
-                        .unwrap_or(&String::from("GUID-NOT-FOUND"))
+                        && get_schema_map()
+                            .get("ms-mcs-admpwd")
+                            .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                            .unwrap_or(false)
                     {
                         relations.push(AceTemplate::new(
                             sid.to_owned(),
@@ -304,12 +299,13 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
+
                 if ["User", "Computer", "Group"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
-                    && (&ace_guid
-                    == get_schema_map()
-                    .get("name")
-                    .unwrap_or(&String::from("GUID-NOT-FOUND")))
+                    && get_schema_map()
+                        .get("name")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
                 {
                     relations.push(AceTemplate::new(
                         sid.to_owned(),
@@ -321,10 +317,10 @@ fn ace_maker<T: LdapObject>(
                 }
                 if ["User", "Computer", "Group"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
-                    && (&ace_guid
-                    == get_schema_map()
-                    .get("cn")
-                    .unwrap_or(&String::from("GUID-NOT-FOUND")))
+                    && get_schema_map()
+                        .get("cn")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
                 {
                     relations.push(AceTemplate::new(
                         sid.to_owned(),
@@ -336,10 +332,10 @@ fn ace_maker<T: LdapObject>(
                 }
                 if entry_type == "Group"
                     && (&ace_guid
-                    == match PROPERTY_SET_GUID_MAP.get(USER_ACCOUNT_RESTRICTIONS_SET) {
-                    Some(guid) => guid,
-                    None => return,
-                })
+                        == match PROPERTY_SET_GUID_MAP.get(USER_ACCOUNT_RESTRICTIONS_SET) {
+                            Some(guid) => guid,
+                            None => return,
+                        })
                     && sid.ends_with("-512")
                 {
                     relations.push(AceTemplate::new(
@@ -363,10 +359,10 @@ fn ace_maker<T: LdapObject>(
                 }
                 if entry_type == "Computer"
                     && (&ace_guid
-                    == match PROPERTY_SET_GUID_MAP.get(USER_ACCOUNT_RESTRICTIONS_SET) {
-                    Some(guid) => guid,
-                    None => return,
-                })
+                        == match PROPERTY_SET_GUID_MAP.get(USER_ACCOUNT_RESTRICTIONS_SET) {
+                            Some(guid) => guid,
+                            None => return,
+                        })
                     && !sid.ends_with("-512")
                 {
                     relations.push(AceTemplate::new(
@@ -390,10 +386,10 @@ fn ace_maker<T: LdapObject>(
                 // AddKeyCredentialLink write access
                 if ((entry_type == "User") || (entry_type == "Computer"))
                     && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
-                    && (&ace_guid
-                    == get_schema_map()
-                    .get("ms-ds-key-credential-link")
-                    .unwrap_or(&String::from("GUID-NOT-FOUND")))
+                    && get_schema_map()
+                        .get("ms-ds-key-credential-link")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
                 {
                     relations.push(AceTemplate::new(
                         sid.to_owned(),
@@ -405,11 +401,11 @@ fn ace_maker<T: LdapObject>(
                 }
                 if ((entry_type == "User") || (entry_type == "Computer"))
                     && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
-                    && (&ace_guid
-                    == get_schema_map()
-                    .get("service-principal-name")
-                    .unwrap_or(&String::from("GUID-NOT-FOUND")))
-                    || PROPERTY_SET_GUID_MAP.get(ace_guid.as_str()) == Some(&"public-information")
+                    && get_schema_map()
+                        .get("service-principal-name")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                    || PROPERTY_SET_GUID_MAP.get("public-information") == Some(&ace_guid)
                 {
                     relations.push(AceTemplate::new(
                         sid.to_owned(),
@@ -421,7 +417,10 @@ fn ace_maker<T: LdapObject>(
                 }
             } else if (MaskFlags::ADS_RIGHT_DS_SELF.bits() | mask) == mask
                 && (entry_type == "Group")
-                && (ace_guid == WRITE_MEMBER)
+                && get_schema_map()
+                    .get("member")
+                    .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                    .unwrap_or(false)
             {
                 relations.push(AceTemplate::new(
                     sid.to_owned(),
@@ -438,18 +437,18 @@ fn ace_maker<T: LdapObject>(
                 && (entry_type == "Computer")
                 && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
                 && object.get_haslaps().to_owned()
-                && (&ace_guid
-                == get_schema_map()
-                .get("ms-mcs-admpwd")
-                .unwrap_or(&String::from("GUID-NOT-FOUND"))
-                || &ace_guid
-                == get_schema_map()
-                .get("ms-laps-password")
-                .unwrap_or(&String::from("GUID-NOT-FOUND"))
-                || &ace_guid
-                == get_schema_map()
-                .get("ms-laps-encryptedpassword")
-                .unwrap_or(&String::from("GUID-NOT-FOUND")))
+                && get_schema_map()
+                    .get("ms-mcs-admpwd")
+                    .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                    .unwrap_or(false)
+                || get_schema_map()
+                    .get("ms-laps-password")
+                    .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                    .unwrap_or(false)
+                || get_schema_map()
+                    .get("ms-laps-encryptedpassword")
+                    .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                    .unwrap_or(false)
             {
                 relations.push(AceTemplate::new(
                     sid.to_owned(),
@@ -459,18 +458,32 @@ fn ace_maker<T: LdapObject>(
                     "".to_string(),
                 ));
             }
-
             if ["User", "Group", "OU", "Computer"].contains(&entry_type)
                 && (MaskFlags::ADS_RIGHT_DS_CREATE_CHILD.bits() | mask) == mask
                 && !is_filtered_sid(&sid)
+                && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
             {
-                relations.push(AceTemplate::new(
-                    sid.to_owned(),
-                    "".to_string(),
-                    "CreateChild".to_string(),
-                    is_inherited,
-                    "".to_string(),
-                ));
+                if get_schema_map()
+                    .get("ms-ds-delegated-managed-service-account")
+                    .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                    .unwrap_or(false)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "CreateChildDMSA".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                } else {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "CreateChild".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
             }
             // Extended rights
             // https://github.com/fox-it/BloodHound.py/blob/645082e3462c93f31b571db945cde1fd7b837fb9/bloodhound/enumeration/acls.py#L146
@@ -602,6 +615,7 @@ fn ace_maker<T: LdapObject>(
                 Some(mask) => mask,
                 None => continue,
             };
+            
             trace!("ACE MASK for ACETYPE 0x00: {:?}", mask);
 
             if (MaskFlags::GENERIC_ALL.bits() | mask) == mask {
@@ -694,11 +708,12 @@ fn ace_maker<T: LdapObject>(
                 relations.push(AceTemplate::new(
                     sid.to_owned(),
                     "".to_string(),
-                    "CreateChild".to_string(),
+                    "CreateChildAll".to_string(),
                     is_inherited,
                     "".to_string(),
                 ));
             }
+
             if ["EnterpriseCA"].contains(&entry_type) // "RootCA"
                 && (MaskFlags::MANAGE_CA.bits() | mask) == mask
             {
@@ -732,8 +747,8 @@ fn can_write_property(ace: &Ace, right_name: &str) -> bool {
     // is set in ObjectType, or if we have the ADS_RIGHT_DS_WRITE_PROP right and the ObjectType
     // is empty, in which case we can write to any property. This is documented in
     // [MS-ADTS] section 5.1.3.2: https://msdn.microsoft.com/en-us/library/cc223511.aspx
-    let right_guid = match get_schema_map().get(right_name) {
-        Some(guid) => guid,
+    let right_guid_bytes = match get_schema_map().get(right_name) {
+        Some(bytes) => bytes,
         None => {
             error!("has_write_property: unknown right name '{}'", right_name);
             return false;
@@ -757,18 +772,9 @@ fn can_write_property(ace: &Ace, right_name: &str) -> bool {
         return true;
     }
 
-    let typea = AceFormat::get_object_type(&ace.data).unwrap_or_default();
+    let object_type = AceFormat::get_object_type(&ace.data).unwrap_or_default();
 
-    let object_type_guid = decode_guid_le(typea.to_le_bytes().as_ref()).to_lowercase();
-    trace!("AceFormat::get_object_type {}", object_type_guid);
-    trace!("bin_property_guid_string {}", right_guid.to_lowercase());
-
-    if object_type_guid == right_guid.to_lowercase() {
-        trace!("MATCHED AceFormat::get_object_type with bin_property!");
-        return true;
-    }
-
-    false
+    u128::from_le_bytes(*right_guid_bytes) == object_type
 }
 
 /// Checks if the access is sufficient to control the right with the given GUID.
@@ -778,7 +784,7 @@ fn has_extended_right(ace: &Ace, right_name: &str) -> bool {
     // is set in ObjectType, or if we have the ADS_RIGHT_DS_CONTROL_ACCESS right and the ObjectType
     // is empty, in which case we have all extended rights. This is documented in
     // [MS-ADTS] section 5.1.3.2: https://msdn.microsoft.com/en-us/library/cc223511.aspx
-    let bin_right_guid = match EXTENDED_RIGHTS_GUID_MAP.get(right_name) {
+    let right_guid_bytes = match EXTENDED_RIGHTS_GUID_MAP.get(right_name) {
         Some(guid) => guid,
         None => {
             error!("has_extended_right: unknown right name '{}'", right_name);
@@ -796,33 +802,17 @@ fn has_extended_right(ace: &Ace, right_name: &str) -> bool {
     }
     // Get the Flag for the ace.datas
     let flags = AceFormat::get_flags(&ace.data).unwrap().bits();
-
     if (flags & ACE_OBJECT_TYPE_PRESENT) != ACE_OBJECT_TYPE_PRESENT {
-        // if not ace_object.acedata.has_flag(ACCESS_ALLOWED_OBJECT_ACE.ACE_OBJECT_TYPE_PRESENT):
-        trace!("has_extended_right : return true for ACE_OBJECT_TYPE_PRESENT != ace_flags");
         return true;
     }
-
-    let typea = AceFormat::get_object_type(&ace.data).unwrap_or_default();
-
-    trace!(
-        "AceFormat::get_object_type {}",
-        decode_guid_le(typea.to_le_bytes().as_ref()).to_lowercase()
-    );
-    trace!("bin_right_guid {}", bin_right_guid.to_lowercase());
-
-    if decode_guid_le(typea.to_le_bytes().as_ref()).to_lowercase() == bin_right_guid.to_lowercase()
-    {
-        trace!("MATCHED AceFormat::get_object_type with bin_right_guid!");
-        return true;
-    }
-
-    false
+    let result = AceFormat::get_object_type(&ace.data).unwrap_or_default() == *right_guid_bytes;
+    trace!("has_extended_right : result = {:?}", result);
+    result
 }
 
 /// Check if an ACE applies to this object.
 /// <https://github.com/fox-it/BloodHound.py/blob/645082e3462c93f31b571db945cde1fd7b837fb9/bloodhound/enumeration/acls.py#L229>
-fn ace_applies(ace_guid: &String, entry_type: &str) -> bool {
+fn ace_applies(ace_guid: &u128, entry_type: &str) -> bool {
     // Checks if an ACE applies to this object (based on object classes).
     // Note that this function assumes you already verified that InheritedObjectType is set (via the flag).
     // If this is not set, the ACE applies to all object types.
@@ -832,12 +822,13 @@ fn ace_applies(ace_guid: &String, entry_type: &str) -> bool {
         "get_schema_map(): {}",
         get_schema_map()
             .get(&entry_type_lower)
-            .unwrap_or(&String::from("GUID-NOT-FOUND"))
+            .map(|bytes| u128::from_le_bytes(*bytes) == *ace_guid)
+            .unwrap_or(false)
     );
-    ace_guid
-        == get_schema_map()
+    get_schema_map()
         .get(&entry_type_lower)
-        .unwrap_or(&String::from("GUID-NOT-FOUND"))
+        .map(|bytes| u128::from_le_bytes(*bytes) == *ace_guid)
+        .unwrap_or(false)
 }
 
 /// Function to parse GMSA DACL which states which users (or groups) can read the password
@@ -863,7 +854,7 @@ pub fn parse_ca_security(
     // SharpHound prefer to use the values from registry as they are the ground truth.
     // If changes are made on the CA server, registry and the AD object is updated.
     // If changes are made directly on the AD object, the CA server registry is not updated.
-    // For RustHound, we need to use AD object DACL because we dont have RPC to read registry yet.
+    // For RustHound, we need to use AD object DACL because we don't have RPC to read registry yet.
     let blacklist_sid = [
         // <https://learn.microsoft.com/fr-fr/windows-server/identity/ad-ds/manage/understand-security-identifiers>
         "-544", // Administrators
@@ -1026,9 +1017,12 @@ fn has_control(secdesc_control: u16, flag: SecurityDescriptorFlags) -> bool {
     let flags = SecurityDescriptorFlags::from_bits(secdesc_control).unwrap();
     flags.contains(flag)
 }
-static SCHEMA_GUID_MAP: OnceLock<HashMap<String, String>> = OnceLock::new();
-static PROPERTY_SET_CHILD_MAP: OnceLock<HashMap<String, Vec<String>>> = OnceLock::new();
-pub fn init_maps(schema: HashMap<String, String>, property_set: HashMap<String, Vec<String>>) {
+static SCHEMA_GUID_MAP: OnceLock<HashMap<String, [u8; 16]>> = OnceLock::new();
+static PROPERTY_SET_CHILD_MAP: OnceLock<HashMap<[u8; 16], Vec<[u8; 16]>>> = OnceLock::new();
+pub fn init_maps(
+    schema: HashMap<String, [u8; 16]>,
+    property_set: HashMap<[u8; 16], Vec<[u8; 16]>>,
+) {
     let mut base_attributes = build_default_guid_map();
     base_attributes.extend(schema);
     let _ = SCHEMA_GUID_MAP.set(base_attributes);
@@ -1038,7 +1032,7 @@ pub fn init_maps(schema: HashMap<String, String>, property_set: HashMap<String, 
 // fn get_property_set_child_map() -> &'static HashMap<String, Vec<String>> {
 //     PROPERTY_SET_CHILD_MAP.get_or_init(|| HashMap::new())
 // }
-fn get_schema_map() -> &'static HashMap<String, String> {
+pub fn get_schema_map() -> &'static HashMap<String, [u8; 16]> {
     SCHEMA_GUID_MAP.get_or_init(build_default_guid_map)
 }
 fn is_filtered_sid(sid: &str) -> bool {
@@ -1055,5 +1049,5 @@ fn is_filtered_sid(sid: &str) -> bool {
         || sid.ends_with("-518")            // Schema Admins
         || sid.ends_with("-519")            // Enterprise Admins
         || sid.ends_with("-520")            // Group Policy Creator Owners
-        || sid.ends_with("-521")            // RODCs
+        || sid.ends_with("-521") // RODCs
 }

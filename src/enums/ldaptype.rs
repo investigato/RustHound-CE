@@ -41,6 +41,9 @@ pub fn get_type(result: &SearchEntry) -> std::result::Result<Type, Type> {
             _ if contains(vals, "msDS-GroupManagedServiceAccount") => {
                 return Ok(Type::User);
             }
+            _ if contains(vals, "msDS-DelegatedManagedServiceAccount") => {
+                return Ok(Type::User);
+            }
             _ if contains(vals, "group") => {
                 return Ok(Type::Group);
             }
@@ -98,6 +101,7 @@ pub fn get_type(result: &SearchEntry) -> std::result::Result<Type, Type> {
                     }
                 }
             }
+
             _ => {}
         }
     }

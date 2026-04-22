@@ -4,14 +4,31 @@ use indicatif::ProgressBar;
 use ldap3::SearchEntry;
 
 use crate::{
-    args::Options, banner::progress_bar, enums::{get_type, Type, PARSER_MOD_RE1, PARSER_MOD_RE2}, json::{
-        checker::check_all_result,
-    },
-    enums::{init_maps},
+    args::Options,
+    banner::progress_bar,
+    enums::init_maps,
+    enums::{get_type, Type, PARSER_MOD_RE1, PARSER_MOD_RE2},
+    json::checker::check_all_result,
     objects::{
-        aiaca::AIACA, attribute::{build_maps,SchemaEntry}, certtemplate::CertTemplate, common::parse_unknown, computer::Computer, container::Container, domain::Domain, enterpriseca::EnterpriseCA, fsp::Fsp, gpo::Gpo, group::Group, issuancepolicy::IssuancePolicy, ntauthstore::NtAuthStore, ou::Ou, rootca::RootCA, trust::Trust, user::User
-    }, 
-    storage::{EntrySource}
+        aiaca::AIACA,
+        attribute::{build_maps, SchemaEntry},
+        certtemplate::CertTemplate,
+        common::parse_unknown,
+        computer::Computer,
+        container::Container,
+        domain::Domain,
+        enterpriseca::EnterpriseCA,
+        fsp::Fsp,
+        gpo::Gpo,
+        group::Group,
+        issuancepolicy::IssuancePolicy,
+        ntauthstore::NtAuthStore,
+        ou::Ou,
+        rootca::RootCA,
+        trust::Trust,
+        user::User,
+    },
+    storage::EntrySource,
 };
 
 #[derive(Default)]
@@ -263,4 +280,3 @@ pub fn parse_result_type_from_source(
     log::info!("Parsing LDAP objects finished!");
     Ok(results)
 }
-
