@@ -1,55 +1,57 @@
-use serde_json::value::Value;
-use serde::{Deserialize, Serialize};
 use ldap3::SearchEntry;
 use log::{debug, error, trace};
+use serde::{Deserialize, Serialize};
+use serde_json::value::Value;
 use std::collections::HashMap;
-use std::error::Error;
 use std::collections::HashSet;
+use std::error::Error;
 use x509_parser::prelude::*;
 
+use crate::enums::acl::{parse_gmsa, parse_ntsecuritydescriptor};
 use crate::enums::regex::{OBJECT_SID_RE1, SID_PART1_RE1};
-use crate::objects::common::{LdapObject, AceTemplate, SPNTarget, Link, Member};
-use crate::utils::date::{convert_timestamp, string_to_epoch};
-use crate::utils::crypto::convert_encryption_types;
-use crate::enums::acl::{parse_ntsecuritydescriptor, parse_gmsa};
 use crate::enums::secdesc::LdapSid;
 use crate::enums::sid::sid_maker;
 use crate::enums::spntasks::check_spn;
 use crate::enums::uacflags::get_flag;
+use crate::objects::common::{AceTemplate, LdapObject, Link, Member, SPNTarget};
+use crate::utils::crypto::convert_encryption_types;
+use crate::utils::date::{convert_timestamp, string_to_epoch};
 
 /// User structure
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct User {
-    #[serde(rename ="ObjectIdentifier")]
+    #[serde(rename = "ObjectIdentifier")]
     object_identifier: String,
-    #[serde(rename ="IsDeleted")]
+    #[serde(rename = "IsDeleted")]
     is_deleted: bool,
-    #[serde(rename ="IsACLProtected")]
+    #[serde(rename = "IsACLProtected")]
     is_acl_protected: bool,
-    #[serde(rename ="Properties")]
+    #[serde(rename = "Properties")]
     properties: UserProperties,
-    #[serde(rename ="PrimaryGroupSID")]
+    #[serde(rename = "PrimaryGroupSID")]
     primary_group_sid: String,
-    #[serde(rename ="SPNTargets")]
+    #[serde(rename = "SPNTargets")]
     spn_targets: Vec<SPNTarget>,
-    #[serde(rename ="UnconstrainedDelegation")]
+    #[serde(rename = "UnconstrainedDelegation")]
     unconstrained_delegation: bool,
-    #[serde(rename ="DomainSID")]
+    #[serde(rename = "DomainSID")]
     domain_sid: String,
-    #[serde(rename ="Aces")]
+    #[serde(rename = "Aces")]
     aces: Vec<AceTemplate>,
-    #[serde(rename ="AllowedToDelegate")]
+    #[serde(rename = "AllowedToDelegate")]
     allowed_to_delegate: Vec<Member>,
-    #[serde(rename ="HasSIDHistory")]
+    #[serde(rename = "HasSIDHistory")]
     has_sid_history: Vec<String>,
-    #[serde(rename ="ContainedBy")]
+    #[serde(rename = "ContainedBy")]
     contained_by: Option<Member>,
 }
 
 impl User {
     // New User
-    pub fn new() -> Self { 
-        Self { ..Default::default()} 
+    pub fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
     }
 
     // Immutable access.
@@ -79,7 +81,7 @@ impl User {
         domain: &str,
         dn_sid: &mut HashMap<String, String>,
         sid_type: &mut HashMap<String, String>,
-        domain_sid: &str
+        domain_sid: &str,
     ) -> Result<(), Box<dyn Error>> {
         let result_dn: String = result.dn.to_uppercase();
         let result_attrs: HashMap<String, Vec<String>> = result.attrs;
@@ -104,12 +106,12 @@ impl User {
         self.domain_sid = domain_sid.to_string();
 
         // With a check
-        let mut group_id: String ="".to_owned();
+        let mut group_id: String = "".to_owned();
         for (key, value) in &result_attrs {
             match key.as_str() {
                 "sAMAccountName" => {
                     let name = &value[0];
-                    let email = format!("{}@{}",name.to_owned(),domain);
+                    let email = format!("{}@{}", name.to_owned(), domain);
                     self.properties.name = email.to_uppercase();
                     self.properties.samaccountname = name.to_string();
                 }
@@ -140,7 +142,7 @@ impl User {
                 "adminCount" => {
                     let isadmin = &value[0];
                     let mut admincount = false;
-                    if isadmin =="1" {
+                    if isadmin == "1" {
                         admincount = true;
                     }
                     self.properties.admincount = admincount;
@@ -193,7 +195,7 @@ impl User {
                         let spn = spn_raw.trim().replace('\\', "/");
                         // SPN need to be: service/host[:port][/...]
                         let host_part = spn
-                            .split_once('/')   // Split to get hostname and service
+                            .split_once('/') // Split to get hostname and service
                             .map(|(_, rest)| rest)
                             .unwrap_or(spn.as_str());
 
@@ -206,8 +208,8 @@ impl User {
                             error!("Skipping empty host in SPN: {:?}", spn_raw);
                             continue;
                         }
-                        
-                        // Save it 
+
+                        // Save it
                         if seen.insert(fqdn_upper.clone()) {
                             let mut m = Member::new();
                             *m.object_identifier_mut() = fqdn_upper; // déjà uppercase
@@ -256,10 +258,10 @@ impl User {
                         let _target = match check_spn(v).to_owned() {
                             Some(_target) => {
                                 if !added {
-                                   targets.push(_target.to_owned());
-                                   added = true;
+                                    targets.push(_target.to_owned());
+                                    added = true;
                                 }
-                            },
+                            }
                             None => {}
                         };
                     }
@@ -277,9 +279,17 @@ impl User {
                     self.is_deleted = true;
                 }
                 "msDS-SupportedEncryptionTypes" => {
-                    self.properties.supportedencryptiontypes = convert_encryption_types(value[0].parse::<i32>().unwrap_or(0));
+                    self.properties.supportedencryptiontypes =
+                        convert_encryption_types(value[0].parse::<i32>().unwrap_or(0));
                 }
-                 _ => {}
+                "msDS-DelegatedMSAState" => {
+                    self.properties.delegatedmsastate = value[0].parse::<i32>().unwrap_or(0);
+                }
+                "objectClass" => {
+                    self.properties.objectclass =
+                        value.last().unwrap_or(&String::from("user")).to_owned();
+                }
+                _ => {}
             }
         }
 
@@ -338,7 +348,7 @@ impl User {
                     // <https://docs.rs/x509-parser/latest/x509_parser/certificate/struct.X509Certificate.html>
                     let res = X509Certificate::from_der(&value[0]);
                     match res {
-                        Ok((_rem, _cert)) => {},
+                        Ok((_rem, _cert)) => {}
                         _ => error!("CA x509 certificate parsing failed: {:?}", res),
                     }
                 }
@@ -362,10 +372,7 @@ impl User {
             self.object_identifier.to_owned(),
         );
         // Push DN and Type
-        sid_type.insert(
-            self.object_identifier.to_owned(),
-            "User".to_string(),
-        );
+        sid_type.insert(self.object_identifier.to_owned(), "User".to_string());
 
         // Trace and return User struct
         // trace!("JSON OUTPUT: {:?}",serde_json::to_string(&self).unwrap());
@@ -482,7 +489,9 @@ pub struct UserProperties {
     admincount: bool,
     supportedencryptiontypes: Vec<String>,
     sidhistory: Vec<String>,
-    allowedtodelegate: Vec<String>
+    allowedtodelegate: Vec<String>,
+    delegatedmsastate: i32,
+    objectclass: String,
 }
 
 impl UserProperties {

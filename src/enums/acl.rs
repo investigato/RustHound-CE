@@ -330,6 +330,81 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
+                if ["User", "Computer", "Group"].contains(&entry_type)
+                    && !is_filtered_sid(&sid)
+                    && get_schema_map()
+                        .get("ms-ds-managed-account-preceded-by-link")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "WriteMsDSManagedAccountPrecededByLink".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
+                if ["User", "Computer", "Group"].contains(&entry_type)
+                    && !is_filtered_sid(&sid)
+                    && get_schema_map()
+                        .get("ms-ds-superseded-managed-account-link")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "WriteMsDSSupersededManagedAccountLink".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
+				if ["User", "Computer", "Group"].contains(&entry_type)
+					&& !is_filtered_sid(&sid)
+					&& get_schema_map()
+					.get("ms-ds-superseded-service-account-state")
+					.map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+					.unwrap_or(false)
+				{
+					relations.push(AceTemplate::new(
+						sid.to_owned(),
+			            "".to_string(),
+			            "WriteMsDSSupersededServiceAccountState".to_string(),
+			            is_inherited,
+			            "".to_string(),
+					));
+				}
+                if ["User", "Computer", "Group"].contains(&entry_type)
+                    && !is_filtered_sid(&sid)
+                    && get_schema_map()
+                        .get("ms-ds-delegated-msa-state")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "WriteMsDSDelegatedMSAState".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
+				if ["User", "Computer", "Group"].contains(&entry_type)
+					&& !is_filtered_sid(&sid)
+					&& get_schema_map()
+					.get("ms-ds-group-msa-membership")
+					.map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+					.unwrap_or(false)
+				{
+					relations.push(AceTemplate::new(
+						sid.to_owned(),
+			            "".to_string(),
+			            "WriteMsDSGroupMSAMembership".to_string(),
+			            is_inherited,
+			            "".to_string(),
+					));
+				}
                 if entry_type == "Group"
                     && (&ace_guid
                         == match PROPERTY_SET_GUID_MAP.get(USER_ACCOUNT_RESTRICTIONS_SET) {
@@ -615,7 +690,7 @@ fn ace_maker<T: LdapObject>(
                 Some(mask) => mask,
                 None => continue,
             };
-            
+
             trace!("ACE MASK for ACETYPE 0x00: {:?}", mask);
 
             if (MaskFlags::GENERIC_ALL.bits() | mask) == mask {
