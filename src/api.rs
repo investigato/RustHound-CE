@@ -16,6 +16,7 @@ use crate::{
         common::parse_unknown,
         computer::Computer,
         container::Container,
+        delegatedmsa::DelegatedMSA,
         domain::Domain,
         enterpriseca::EnterpriseCA,
         fsp::Fsp,
@@ -34,6 +35,7 @@ use crate::{
 #[derive(Default)]
 pub struct ADResults {
     pub users: Vec<User>,
+    pub dmsas: Vec<DelegatedMSA>,
     pub groups: Vec<Group>,
     pub computers: Vec<Computer>,
     pub ous: Vec<Ou>,
@@ -81,6 +83,7 @@ pub async fn prepare_results_from_source<S: EntrySource>(
     check_all_result(
         options,
         &mut ad_results.users,
+        &mut ad_results.dmsas,
         &mut ad_results.groups,
         &mut ad_results.computers,
         &mut ad_results.ous,
@@ -164,6 +167,11 @@ pub fn parse_result_type_from_source(
                 let mut user: User = User::new();
                 user.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
                 results.users.push(user);
+            }
+            Type::DelegatedMSA => {
+                let mut dmsa: DelegatedMSA = DelegatedMSA::new();
+                dmsa.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
+                results.dmsas.push(dmsa);
             }
             Type::Group => {
                 let mut group = Group::new();

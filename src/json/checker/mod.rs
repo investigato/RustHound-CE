@@ -1,56 +1,48 @@
 use std::collections::HashMap;
 use std::error::Error;
 
-use log::{info,debug};
 use crate::args::Options;
 use crate::enums::{ldaptype::*, templates_enabled_change_displayname_to_sid};
 use crate::objects::{
-    user::User,
-    computer::Computer,
-    group::Group,
-    ou::Ou,
-    container::Container,
-    gpo::Gpo,
-    domain::Domain,
-    fsp::Fsp,
-    trust::Trust,
-    ntauthstore::NtAuthStore,
-    aiaca::AIACA,
-    rootca::RootCA,
-    enterpriseca::EnterpriseCA,
-    certtemplate::CertTemplate,
-    issuancepolicy::IssuancePolicy,
+    aiaca::AIACA, certtemplate::CertTemplate, computer::Computer, container::Container,
+    delegatedmsa::DelegatedMSA, domain::Domain, enterpriseca::EnterpriseCA, fsp::Fsp, gpo::Gpo,
+    group::Group, issuancepolicy::IssuancePolicy, ntauthstore::NtAuthStore, ou::Ou, rootca::RootCA,
+    trust::Trust, user::User,
 };
+use log::{debug, info};
+
 pub mod common;
 
 /// Functions to replace and add missing values
 pub fn check_all_result(
-    common_args:             &Options,
-    vec_users:               &mut Vec<User>,
-    vec_groups:              &mut Vec<Group>,
-    vec_computers:           &mut [Computer],
-    vec_ous:                 &mut [Ou],
-    vec_domains:             &mut Vec<Domain>,
-    vec_gpos:                &mut [Gpo],
-    _vec_fsps:               &mut [Fsp],
-    vec_containers:          &mut [Container],
-    vec_trusts:              &mut [Trust],
-    vec_ntauthstores:        &mut [NtAuthStore],
-    vec_aiacas:              &mut [AIACA],
-    vec_rootcas:             &mut [RootCA],
-    vec_enterprisecas:       &mut [EnterpriseCA],
-    vec_certtemplates:       &mut [CertTemplate],
-    vec_issuancepolicies:    &mut [IssuancePolicy],
-    dn_sid:                  &HashMap<String, String>,
-    sid_type:                &HashMap<String, String>,
-    fqdn_sid:                &HashMap<String, String>,
-    _fqdn_ip:                &HashMap<String, String>,
+    common_args: &Options,
+    vec_users: &mut Vec<User>,
+    vec_dmsas: &mut Vec<DelegatedMSA>,
+    vec_groups: &mut Vec<Group>,
+    vec_computers: &mut [Computer],
+    vec_ous: &mut [Ou],
+    vec_domains: &mut Vec<Domain>,
+    vec_gpos: &mut [Gpo],
+    _vec_fsps: &mut [Fsp],
+    vec_containers: &mut [Container],
+    vec_trusts: &mut [Trust],
+    vec_ntauthstores: &mut [NtAuthStore],
+    vec_aiacas: &mut [AIACA],
+    vec_rootcas: &mut [RootCA],
+    vec_enterprisecas: &mut [EnterpriseCA],
+    vec_certtemplates: &mut [CertTemplate],
+    vec_issuancepolicies: &mut [IssuancePolicy],
+    dn_sid: &HashMap<String, String>,
+    sid_type: &HashMap<String, String>,
+    fqdn_sid: &HashMap<String, String>,
+    _fqdn_ip: &HashMap<String, String>,
 ) -> Result<(), Box<dyn Error>> {
     let domain = &common_args.domain;
     info!("Starting checker to replace some values...");
-    
+
     debug!("Replace SID with checker.rs started");
     common::replace_fqdn_by_sid(Type::User, vec_users, fqdn_sid)?;
+    common::replace_fqdn_by_sid(Type::DelegatedMSA, vec_dmsas, fqdn_sid)?;
     common::replace_fqdn_by_sid(Type::Computer, vec_computers, fqdn_sid)?;
     templates_enabled_change_displayname_to_sid(vec_certtemplates, vec_enterprisecas)?;
     common::replace_sid_members(vec_groups, dn_sid, sid_type, vec_trusts)?;
@@ -63,6 +55,7 @@ pub fn check_all_result(
 
     debug!("Adding PrincipalType for ACEs started");
     common::add_type_for_ace(vec_users, sid_type)?;
+    common::add_type_for_ace(vec_dmsas, sid_type)?;
     common::add_type_for_ace(vec_groups, sid_type)?;
     common::add_type_for_ace(vec_computers, sid_type)?;
     common::add_type_for_ace(vec_gpos, sid_type)?;
@@ -87,6 +80,7 @@ pub fn check_all_result(
 
     debug!("Adding ContainedBy value started");
     common::add_contained_by_for(vec_users, dn_sid, sid_type)?;
+    common::add_contained_by_for(vec_dmsas, dn_sid, sid_type)?;
     common::add_contained_by_for(vec_groups, dn_sid, sid_type)?;
     common::add_contained_by_for(vec_computers, dn_sid, sid_type)?;
     common::add_contained_by_for(vec_gpos, dn_sid, sid_type)?;

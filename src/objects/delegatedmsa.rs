@@ -7,7 +7,7 @@ use std::collections::HashSet;
 use std::error::Error;
 use x509_parser::prelude::*;
 
-use crate::enums::acl::{parse_gmsa, parse_ntsecuritydescriptor};
+use crate::enums::acl::{parse_gmsa_dmsa, parse_ntsecuritydescriptor};
 use crate::enums::regex::{OBJECT_SID_RE1, SID_PART1_RE1};
 use crate::enums::secdesc::LdapSid;
 use crate::enums::sid::sid_maker;
@@ -19,7 +19,7 @@ use crate::utils::date::{convert_timestamp, string_to_epoch};
 
 /// User structure
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct User {
+pub struct DelegatedMSA {
     #[serde(rename = "ObjectIdentifier")]
     object_identifier: String,
     #[serde(rename = "IsDeleted")]
@@ -27,7 +27,7 @@ pub struct User {
     #[serde(rename = "IsACLProtected")]
     is_acl_protected: bool,
     #[serde(rename = "Properties")]
-    properties: UserProperties,
+    properties: DelegatedMSAProperties,
     #[serde(rename = "PrimaryGroupSID")]
     primary_group_sid: String,
     #[serde(rename = "SPNTargets")]
@@ -46,8 +46,8 @@ pub struct User {
     contained_by: Option<Member>,
 }
 
-impl User {
-    // New User
+impl DelegatedMSA {
+    // New DelegatedMSA
     pub fn new() -> Self {
         Self {
             ..Default::default()
@@ -55,7 +55,7 @@ impl User {
     }
 
     // Immutable access.
-    pub fn properties(&self) -> &UserProperties {
+    pub fn properties(&self) -> &DelegatedMSAProperties {
         &self.properties
     }
     pub fn aces(&self) -> &Vec<AceTemplate> {
@@ -63,7 +63,7 @@ impl User {
     }
 
     // Mutable access.
-    pub fn properties_mut(&mut self) -> &mut UserProperties {
+    pub fn properties_mut(&mut self) -> &mut DelegatedMSAProperties {
         &mut self.properties
     }
     pub fn aces_mut(&mut self) -> &mut Vec<AceTemplate> {
@@ -88,7 +88,7 @@ impl User {
         let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
 
         // Debug for current object
-        debug!("Parse user: {result_dn}");
+        debug!("Parse dMSA: {result_dn}");
 
         // Trace all result attributes
         for (key, value) in &result_attrs {
@@ -282,6 +282,18 @@ impl User {
                     self.properties.supportedencryptiontypes =
                         convert_encryption_types(value[0].parse::<i32>().unwrap_or(0));
                 }
+                "msDS-DelegatedMSAState" => {
+                    self.properties.delegatedmsastate = value[0].parse::<i32>().unwrap_or(0);
+                }
+                "msDS-ManagedAccountPrecededByLink" => {
+                    self.properties.managedaccountprecededbylink = value[0].to_owned();
+                }
+				"msDS-SupersededManagedAccountLink" => {
+					self.properties.supersededmanagedaccountlink = value[0].to_owned();
+				}
+				"msDS-SupersededManagedAccountState" => {
+					self.properties.supersededmanagedaccountstate = value[0].parse::<i32>().unwrap_or(0);
+				}
                 _ => {}
             }
         }
@@ -333,7 +345,7 @@ impl User {
                     );
                     // Now add the new ACE wich who can read GMSA password
                     // trace!("User ACES before GMSA: {:?}", self.aces());
-                    parse_gmsa(&mut relations_ace, self);
+                    parse_gmsa_dmsa(&mut relations_ace, self);
                     // trace!("User ACES after GMSA: {:?}", self.aces());
                 }
                 "userCertificate" => {
@@ -374,7 +386,7 @@ impl User {
 }
 
 /// Function to change some values from LdapObject trait for User
-impl LdapObject for User {
+impl LdapObject for DelegatedMSA {
     // To JSON
     fn to_json(&self) -> Value {
         serde_json::to_value(self).unwrap()
@@ -447,7 +459,7 @@ impl LdapObject for User {
 
 /// User properties structure
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct UserProperties {
+pub struct DelegatedMSAProperties {
     domain: String,
     name: String,
     domainsid: String,
@@ -483,9 +495,13 @@ pub struct UserProperties {
     supportedencryptiontypes: Vec<String>,
     sidhistory: Vec<String>,
     allowedtodelegate: Vec<String>,
+    delegatedmsastate: i32,
+    managedaccountprecededbylink: String,
+    supersededmanagedaccountlink: String,
+    supersededmanagedaccountstate: i32,
 }
 
-impl UserProperties {
+impl DelegatedMSAProperties {
     // Immutable access.
     pub fn name(&self) -> &String {
         &self.name

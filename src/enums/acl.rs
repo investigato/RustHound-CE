@@ -6,6 +6,7 @@ use crate::enums::constants::*;
 use crate::enums::schema_guids::*;
 use crate::enums::secdesc::*;
 use crate::enums::sid::sid_maker;
+use crate::objects::delegatedmsa::DelegatedMSA;
 use crate::objects::{
     common::{AceTemplate, LdapObject},
     user::User,
@@ -360,21 +361,21 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-				if ["User", "Computer", "Group"].contains(&entry_type)
-					&& !is_filtered_sid(&sid)
-					&& get_schema_map()
-					.get("ms-ds-superseded-service-account-state")
-					.map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
-					.unwrap_or(false)
-				{
-					relations.push(AceTemplate::new(
-						sid.to_owned(),
-			            "".to_string(),
-			            "WriteMsDSSupersededServiceAccountState".to_string(),
-			            is_inherited,
-			            "".to_string(),
-					));
-				}
+                if ["User", "Computer", "Group"].contains(&entry_type)
+                    && !is_filtered_sid(&sid)
+                    && get_schema_map()
+                        .get("ms-ds-superseded-service-account-state")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "WriteMsDSSupersededServiceAccountState".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
                 if ["User", "Computer", "Group"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
                     && get_schema_map()
@@ -390,21 +391,21 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-				if ["User", "Computer", "Group"].contains(&entry_type)
-					&& !is_filtered_sid(&sid)
-					&& get_schema_map()
-					.get("ms-ds-group-msa-membership")
-					.map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
-					.unwrap_or(false)
-				{
-					relations.push(AceTemplate::new(
-						sid.to_owned(),
-			            "".to_string(),
-			            "WriteMsDSGroupMSAMembership".to_string(),
-			            is_inherited,
-			            "".to_string(),
-					));
-				}
+                if ["User", "Computer", "Group"].contains(&entry_type)
+                    && !is_filtered_sid(&sid)
+                    && get_schema_map()
+                        .get("ms-ds-group-msa-membership")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "WriteMsDSGroupMSAMembership".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
                 if entry_type == "Group"
                     && (&ace_guid
                         == match PROPERTY_SET_GUID_MAP.get(USER_ACCOUNT_RESTRICTIONS_SET) {
@@ -916,6 +917,19 @@ pub fn parse_gmsa(processed_aces: &[AceTemplate], user: &mut User) {
         let mut ace = ace.clone();
         *ace.right_name_mut() = "ReadGMSAPassword".to_string();
         user.aces_mut().push(ace);
+    }
+}
+
+/// Function to parse GMSA DACL which states which users (or groups) can read the password
+pub fn parse_gmsa_dmsa(processed_aces: &[AceTemplate], dmsa: &mut DelegatedMSA) {
+    for ace in processed_aces {
+        if ace.right_name() == "Owner" {
+            // || ace.right_name() == "Owns" {
+            continue;
+        }
+        let mut ace = ace.clone();
+        *ace.right_name_mut() = "ReadGMSAPassword".to_string();
+        dmsa.aces_mut().push(ace);
     }
 }
 
