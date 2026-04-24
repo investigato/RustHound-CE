@@ -6,4 +6,7 @@ datas/
 rusthound-ce*
 .vscode
 .rusthound-cache
+*.py
+*.txt
+.idea/*
 rev.py

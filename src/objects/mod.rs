@@ -19,21 +19,22 @@
 //! let domain = Domain::new();
 //! let container = Container::new();
 //! ```
-//! 
-pub mod user;
-pub mod group;
-pub mod computer;
-pub mod ou;
-pub mod gpo;
-pub mod domain;
-pub mod container;
-pub mod fsp;
-pub mod trust;
-pub mod common;
-pub mod ntauthstore;
+//!
 pub mod aiaca;
-pub mod rootca;
-pub mod enterpriseca;
-pub mod certtemplate;
-pub mod issuancepolicy;
 pub mod attribute;
+pub mod certtemplate;
+pub mod common;
+pub mod computer;
+pub mod container;
+pub mod delegatedmsa;
+pub mod domain;
+pub mod enterpriseca;
+pub mod fsp;
+pub mod gpo;
+pub mod group;
+pub mod issuancepolicy;
+pub mod ntauthstore;
+pub mod ou;
+pub mod rootca;
+pub mod trust;
+pub mod user;

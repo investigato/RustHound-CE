@@ -4,19 +4,38 @@ use indicatif::ProgressBar;
 use ldap3::SearchEntry;
 
 use crate::{
-    args::Options, banner::progress_bar, enums::{get_type, Type, PARSER_MOD_RE1, PARSER_MOD_RE2}, json::{
-        checker::check_all_result,
-    },
-    enums::{init_maps},
+    args::Options,
+    banner::progress_bar,
+    enums::init_maps,
+    enums::{get_type, Type, PARSER_MOD_RE1, PARSER_MOD_RE2},
+    json::checker::check_all_result,
     objects::{
-        aiaca::AIACA, attribute::{build_maps,SchemaEntry}, certtemplate::CertTemplate, common::parse_unknown, computer::Computer, container::Container, domain::Domain, enterpriseca::EnterpriseCA, fsp::Fsp, gpo::Gpo, group::Group, issuancepolicy::IssuancePolicy, ntauthstore::NtAuthStore, ou::Ou, rootca::RootCA, trust::Trust, user::User
-    }, 
-    storage::{EntrySource}
+        aiaca::AIACA,
+        attribute::{build_maps, SchemaEntry},
+        certtemplate::CertTemplate,
+        common::parse_unknown,
+        computer::Computer,
+        container::Container,
+        delegatedmsa::DelegatedMSA,
+        domain::Domain,
+        enterpriseca::EnterpriseCA,
+        fsp::Fsp,
+        gpo::Gpo,
+        group::Group,
+        issuancepolicy::IssuancePolicy,
+        ntauthstore::NtAuthStore,
+        ou::Ou,
+        rootca::RootCA,
+        trust::Trust,
+        user::User,
+    },
+    storage::EntrySource,
 };
 
 #[derive(Default)]
 pub struct ADResults {
     pub users: Vec<User>,
+    pub dmsas: Vec<DelegatedMSA>,
     pub groups: Vec<Group>,
     pub computers: Vec<Computer>,
     pub ous: Vec<Ou>,
@@ -64,6 +83,7 @@ pub async fn prepare_results_from_source<S: EntrySource>(
     check_all_result(
         options,
         &mut ad_results.users,
+        &mut ad_results.dmsas,
         &mut ad_results.groups,
         &mut ad_results.computers,
         &mut ad_results.ous,
@@ -147,6 +167,11 @@ pub fn parse_result_type_from_source(
                 let mut user: User = User::new();
                 user.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
                 results.users.push(user);
+            }
+            Type::DelegatedMSA => {
+                let mut dmsa: DelegatedMSA = DelegatedMSA::new();
+                dmsa.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
+                results.dmsas.push(dmsa);
             }
             Type::Group => {
                 let mut group = Group::new();
@@ -263,4 +288,3 @@ pub fn parse_result_type_from_source(
     log::info!("Parsing LDAP objects finished!");
     Ok(results)
 }
-

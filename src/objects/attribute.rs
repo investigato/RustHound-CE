@@ -1,4 +1,3 @@
-use crate::enums::sid::decode_guid_le;
 use ldap3::SearchEntry;
 use log::trace;
 use serde::{Deserialize, Serialize};
@@ -13,7 +12,7 @@ pub struct SchemaEntry {
     pub attribute_security_guid: Option<[u8; 16]>, // attributeSecurityGUID (from result_bin)
     pub object_class: SchemaObjectClass,
     pub admin_display_name: String, // adminDisplayName
-    pub dn: String,                 
+    pub dn: String,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
@@ -83,18 +82,21 @@ impl SchemaEntry {
     }
 }
 
-pub fn build_maps(entries: Vec<SchemaEntry>) -> (HashMap<String, String>, HashMap<String, Vec<String>>) {
-    let mut schema_map = HashMap::new();
-    let mut property_set_map: HashMap<String, Vec<String>> = HashMap::new();
+pub fn build_maps(
+    entries: Vec<SchemaEntry>,
+) -> (HashMap<String, [u8; 16]>, HashMap<[u8; 16], Vec<[u8; 16]>>) {
+    let mut schema_map: HashMap<String, [u8; 16]> = HashMap::new();
+    let mut property_set_map: HashMap<[u8; 16], Vec<[u8; 16]>> = HashMap::new();
 
     for entry in entries {
-        if let Some(guid) = &entry.schema_id_guid {
-            let guid_str = decode_guid_le(guid).to_lowercase();
-            schema_map.insert(entry.admin_display_name.to_lowercase(), guid_str.clone());
+        if let Some(guid) = entry.schema_id_guid {
+            schema_map.insert(entry.admin_display_name.to_lowercase(), guid);
 
-            if let Some(prop_set_guid) = &entry.attribute_security_guid {
-                let prop_set_str = decode_guid_le(prop_set_guid).to_lowercase();
-                property_set_map.entry(prop_set_str).or_default().push(guid_str);
+            if let Some(prop_set_guid) = entry.attribute_security_guid {
+                property_set_map
+                    .entry(prop_set_guid)
+                    .or_default()
+                    .push(guid);
             }
         }
     }

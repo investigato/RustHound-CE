@@ -123,10 +123,16 @@ pub async fn ldap_search<S: Storage<LdapSearchEntry>>(
             // Required for ReanimateTombstones parsing
             let show_deleted_ctrl=RawControl {
                 ctype:String::from("1.2.840.113556.1.4.417"),
-                crit:false,
+                crit:true,
                 val: None,
             };
-            ldap.with_controls(vec![sec_desc_flag_ctrl.to_owned(),show_deleted_ctrl.to_owned()]);
+
+            let show_deactivated_link_ctrl=RawControl{
+                ctype:String::from("1.2.840.113556.1.4.2065"),
+                crit:true,
+                val: None,
+            };
+            ldap.with_controls(vec![sec_desc_flag_ctrl.to_owned(),show_deleted_ctrl.to_owned(),show_deactivated_link_ctrl.to_owned()]);
             // ldap.with_controls(ctrls.to_owned());
 
             // Prepare filter

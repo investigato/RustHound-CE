@@ -12081,13 +12081,34 @@ pub static DEFAULT_SCHEMA_GUIDS: &[(&str, &str)] = &[
     ),
     ("xmittimeoutnormal", "a8df74a5-c5ea-11d1-bbcb-0080c76670c0"),
     ("xmittimeouturgent", "1482fed4-b098-11d2-aa06-00c04f8eedd8"),
-
-
 ];
+fn guid_str_to_bytes(s: &str) -> [u8; 16] {
+    let parts: Vec<&str> = s.split('-').collect();
+    let mut bytes = [0u8; 16];
 
-pub fn build_default_guid_map() -> HashMap<String, String> {
+    // Group 1: 4 bytes, reversed
+    let d1 = hex::decode(parts[0]).unwrap();
+    bytes[0..4].copy_from_slice(&[d1[3], d1[2], d1[1], d1[0]]);
+
+    // Group 2: 2 bytes, reversed
+    let d2 = hex::decode(parts[1]).unwrap();
+    bytes[4..6].copy_from_slice(&[d2[1], d2[0]]);
+
+    // Group 3: 2 bytes, reversed
+    let d3 = hex::decode(parts[2]).unwrap();
+    bytes[6..8].copy_from_slice(&[d3[1], d3[0]]);
+
+    // Groups 4&5: 8 bytes, leave them alone
+    let d4 = hex::decode(parts[3]).unwrap();
+    let d5 = hex::decode(parts[4]).unwrap();
+    bytes[8..10].copy_from_slice(&d4);
+    bytes[10..16].copy_from_slice(&d5);
+
+    bytes
+}
+pub fn build_default_guid_map() -> HashMap<String, [u8; 16]> {
     DEFAULT_SCHEMA_GUIDS
         .iter()
-        .map(|&(k, v)| (k.to_string(), v.to_string()))
+        .map(|&(k, v)| (k.to_string(), guid_str_to_bytes(v)))
         .collect()
 }
