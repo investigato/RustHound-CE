@@ -1,0 +1,346 @@
+# Instincts generated from https://github.com/investigato/RustHound-CE
+# Generated: 2026-04-24T19:35:01.869Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: RustHound-CE-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Commit Length
+
+## Action
+
+Keep commit messages concise (~46 characters)
+
+## Evidence
+
+- Average commit message length: 46 chars
+- Based on 4 commits
+
+---
+id: RustHound-CE-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: RustHound-CE-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: RustHound-CE-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: RustHound-CE-arch-feature-based
+trigger: "when adding a new feature"
+confidence: 0.85
+domain: architecture
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Arch Feature Based
+
+## Action
+
+Create a new folder in src/features/ with all related code colocated
+
+## Evidence
+
+- Feature-based module organization detected
+- Structure: src/features/[feature-name]/
+
+---
+id: RustHound-CE-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: RustHound-CE-workflow-cross-module-refactor-or-bugfix
+trigger: "when doing cross module refactor or bugfix"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Workflow Cross Module Refactor Or Bugfix
+
+## Action
+
+Follow the cross-module-refactor-or-bugfix workflow:
+1. Identify the cross-cutting concern (e.g., parsing bug, schema update, naming fix).
+2. Update enums to reflect new or fixed values/types.
+3. Modify parser modules to handle the new or corrected logic.
+4. Update object definitions and related modules.
+5. Adjust API layer if exposed externally.
+6. Test changes across affected modules.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/enums/*.rs, src/json/parser/mod.rs, src/objects/*.rs
+
+---
+id: rusthound-ce-instinct-file-naming
+trigger: "When creating or renaming a source file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct File Naming
+
+## Action
+
+Use camelCase for file names
+
+## Evidence
+
+- Pattern in src/enums, src/objects, src/modules
+- Naming convention specified in analysis
+
+---
+id: rusthound-ce-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Function Naming
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Naming convention specified in analysis
+
+---
+id: rusthound-ce-instinct-class-naming
+trigger: "When defining a new struct or enum"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Class Naming
+
+## Action
+
+Use PascalCase for type names
+
+## Evidence
+
+- Naming convention specified in analysis
+
+---
+id: rusthound-ce-instinct-constant-naming
+trigger: "When declaring a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Naming convention specified in analysis
+
+---
+id: rusthound-ce-instinct-import-style
+trigger: "When importing modules or files"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Import Style
+
+## Action
+
+Use relative imports
+
+## Evidence
+
+- Import style specified in analysis
+
+---
+id: rusthound-ce-instinct-export-style
+trigger: "When exporting functions or types"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Export style specified in analysis
+
+---
+id: rusthound-ce-instinct-test-location
+trigger: "When adding tests for a module"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Test Location
+
+## Action
+
+Place tests in a separate location from source files
+
+## Evidence
+
+- testLocation: separate in architecture analysis
+
+---
+id: rusthound-ce-instinct-commit-format-freeform
+trigger: "When writing a commit message"
+confidence: 0.8
+domain: git
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Commit Format Freeform
+
+## Action
+
+Use a freeform message without a strict prefix, typically describing the change in 3-8 words
+
+## Evidence
+
+- Examples: 'update deps, bincode -> oxicode', 'fixed spelling errors in object. inssuancepolicie->issuancepolicy'
+- No prefixes detected in commit patterns
+
+---
+id: rusthound-ce-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Commit Length
+
+## Action
+
+Keep commit messages concise, averaging around 46 characters
+
+## Evidence
+
+- averageLength: 46 in commit analysis
+
+---
+id: rusthound-ce-instinct-cross-module-refactor
+trigger: "When a parsing issue, schema update, or cross-cutting refactor is needed across enums, objects, and parser modules"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Cross Module Refactor
+
+## Action
+
+Follow the cross-module-refactor-or-bugfix workflow: update enums, modify parsers, update objects, adjust API, and test affected modules
+
+## Evidence
+
+- Workflow 'cross-module-refactor-or-bugfix' defined in analysis
+- Example commits and files: 'LAPSv2 parsing fix. ReanimateTombstones parsed, schema generation changed'
+
