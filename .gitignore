@@ -8,3 +8,4 @@ rusthound-ce*
 .rusthound-cache
 *.py
 *.txt
+.idea/*
