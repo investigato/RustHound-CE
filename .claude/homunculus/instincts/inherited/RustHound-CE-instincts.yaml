@@ -1,0 +1,305 @@
+# Instincts generated from https://github.com/investigato/RustHound-CE
+# Generated: 2026-04-24T19:53:58.214Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: RustHound-CE-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Commit Length
+
+## Action
+
+Keep commit messages concise (~48 characters)
+
+## Evidence
+
+- Average commit message length: 48 chars
+- Based on 4 commits
+
+---
+id: RustHound-CE-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: RustHound-CE-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: RustHound-CE-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: RustHound-CE-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: RustHound-CE-workflow-add-or-update-enum-and-object-type
+trigger: "when doing add or update enum and object type"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/investigato/RustHound-CE
+---
+
+# RustHound CE Workflow Add Or Update Enum And Object Type
+
+## Action
+
+Follow the add-or-update-enum-and-object-type workflow:
+1. Edit or add enum files in src/enums/ (such as acl.rs, ldaptype.rs, constants.rs, schema_guids.rs)
+2. Edit or add object files in src/objects/ (such as user.rs, delegatedmsa.rs, attribute.rs)
+3. Update related API logic in src/api.rs if needed
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/enums/acl.rs, src/enums/ldaptype.rs, src/enums/constants.rs
+
+---
+id: rusthound-ce-instinct-camelcase-files
+trigger: "When creating or renaming a source file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Camelcase Files
+
+## Action
+
+Name the file using camelCase (e.g., delegatedMsa.rs, objectClass.rs)
+
+## Evidence
+
+- Pattern in namingConventions.files
+- src/objects/delegatedmsa.rs
+
+---
+id: rusthound-ce-instinct-camelcase-functions
+trigger: "When defining a function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Camelcase Functions
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Pattern in namingConventions.functions
+
+---
+id: rusthound-ce-instinct-pascalcase-classes
+trigger: "When defining a struct or enum"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Pascalcase Classes
+
+## Action
+
+Use PascalCase for type names
+
+## Evidence
+
+- Pattern in namingConventions.classes
+
+---
+id: rusthound-ce-instinct-screaming-constants
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Screaming Constants
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Pattern in namingConventions.constants
+
+---
+id: rusthound-ce-instinct-relative-imports
+trigger: "When importing modules within the project"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Relative Imports
+
+## Action
+
+Use relative imports
+
+## Evidence
+
+- Pattern in importStyle: relative
+
+---
+id: rusthound-ce-instinct-named-exports
+trigger: "When exporting items from a module"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Named Exports
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in exportStyle: named
+
+---
+id: rusthound-ce-instinct-test-in-separate-folder
+trigger: "When adding or updating tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Test In Separate Folder
+
+## Action
+
+Place tests in a separate folder from src (e.g., tests/)
+
+## Evidence
+
+- Pattern in architecture.testLocation: separate
+
+---
+id: rusthound-ce-instinct-commit-freeform
+trigger: "When writing a commit message"
+confidence: 0.8
+domain: git
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Commit Freeform
+
+## Action
+
+Use a freeform, concise message without a strict prefix, averaging ~48 characters
+
+## Evidence
+
+- Seen in commit: 'updating for dMSA accounts and BadSuccessor prep'
+- Seen in commit: 'add new type DelegatedMSA for downstream BloodHound enhancements'
+- Pattern in commits.type: freeform
+
+---
+id: rusthound-ce-instinct-add-or-update-enum-object-type
+trigger: "When introducing a new type or extending enum/object definitions (e.g., for new account types or features)"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: investigato/RustHound-CE
+---
+
+# Rusthound Ce Instinct Add Or Update Enum Object Type
+
+## Action
+
+Edit or add enum files in src/enums/, edit or add object files in src/objects/, and update related API logic in src/api.rs if needed
+
+## Evidence
+
+- Workflow: add-or-update-enum-and-object-type
+- Commit sequence and files in workflow example
+
