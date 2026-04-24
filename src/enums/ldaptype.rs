@@ -1,3 +1,4 @@
+use crate::args::Options;
 use ldap3::SearchEntry;
 //use log::trace;
 
@@ -24,7 +25,7 @@ pub enum Type {
 }
 
 /// Get object type, like ("user","group","computer","ou", "container", "gpo", "domain" "trust").
-pub fn get_type(result: &SearchEntry) -> std::result::Result<Type, Type> {
+pub fn get_type(result: &SearchEntry, common_args: &Options) -> std::result::Result<Type, Type> {
     let result_attrs = &result.attrs;
 
     let contains = |values: &Vec<String>, to_find: &str| values.iter().any(|elem| elem == to_find);
@@ -34,7 +35,11 @@ pub fn get_type(result: &SearchEntry) -> std::result::Result<Type, Type> {
     if let Some(vals) = object_class_vals {
         match () {
             _ if contains(vals, "msDS-DelegatedManagedServiceAccount") => {
-                return Ok(Type::DelegatedMSA);
+                if common_args.include_dmsas == true {
+                    return Ok(Type::DelegatedMSA);
+                } else {
+                    return Ok(Type::User);
+                }
             }
             _ if contains(vals, "person")
                 && contains(vals, "user")

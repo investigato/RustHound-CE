@@ -60,7 +60,7 @@ pub fn parse_result_type(
         // Start parsing with Type matching
         let cloneresult = entry.clone();
         //println!("{:?}",&entry);
-        let atype = get_type(&entry).unwrap_or(Type::Unknown);
+        let atype = get_type(&entry, common_args).unwrap_or(Type::Unknown);
         match atype {
             Type::User => {
                 let mut user: User = User::new();
@@ -68,11 +68,17 @@ pub fn parse_result_type(
                 vec_users.push(user);
             }
             Type::DelegatedMSA => {
-				let mut dmsa: DelegatedMSA = DelegatedMSA::new();
-				dmsa.parse(cloneresult,domain,dn_sid,sid_type,&domain_sid)?;
-				vec_dmsas.push(dmsa);
-			}
-			Type::Group => {
+                if common_args.include_dmsas == true {
+                    let mut dmsa: DelegatedMSA = DelegatedMSA::new();
+                    dmsa.parse(cloneresult, domain, dn_sid, sid_type, &domain_sid)?;
+                    vec_dmsas.push(dmsa);
+                } else {
+                    let mut user: User = User::new();
+                    user.parse(cloneresult, domain, dn_sid, sid_type, &domain_sid)?;
+                    vec_users.push(user);
+                }
+            }
+            Type::Group => {
                 let mut group = Group::new();
                 group.parse(cloneresult, domain, dn_sid, sid_type, &domain_sid)?;
                 vec_groups.push(group);

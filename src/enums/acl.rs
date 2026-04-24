@@ -279,6 +279,7 @@ fn ace_maker<T: LdapObject>(
                 if ((entry_type == "User")
                     || (entry_type == "Group")
                     || (entry_type == "Computer")
+                    || (entry_type == "DelegatedMSA")
                     || (entry_type == "Gpo")
                     || (entry_type == "OU"))
                     && (flags & ACE_OBJECT_TYPE_PRESENT != ACE_OBJECT_TYPE_PRESENT)
@@ -301,7 +302,7 @@ fn ace_maker<T: LdapObject>(
                     ));
                 }
 
-                if ["User", "Computer", "Group"].contains(&entry_type)
+                if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
                     && get_schema_map()
                         .get("name")
@@ -316,7 +317,7 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-                if ["User", "Computer", "Group"].contains(&entry_type)
+                if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
                     && get_schema_map()
                         .get("cn")
@@ -331,7 +332,7 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-                if ["User", "Computer", "Group"].contains(&entry_type)
+                if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
                     && get_schema_map()
                         .get("ms-ds-managed-account-preceded-by-link")
@@ -346,7 +347,7 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-                if ["User", "Computer", "Group"].contains(&entry_type)
+                if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
                     && get_schema_map()
                         .get("ms-ds-superseded-managed-account-link")
@@ -361,7 +362,7 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-                if ["User", "Computer", "Group"].contains(&entry_type)
+                if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
                     && get_schema_map()
                         .get("ms-ds-superseded-service-account-state")
@@ -376,7 +377,7 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-                if ["User", "Computer", "Group"].contains(&entry_type)
+                if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
                     && get_schema_map()
                         .get("ms-ds-delegated-msa-state")
@@ -391,7 +392,7 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-                if ["User", "Computer", "Group"].contains(&entry_type)
+                if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
                     && get_schema_map()
                         .get("ms-ds-group-msa-membership")
@@ -423,7 +424,8 @@ fn ace_maker<T: LdapObject>(
                     ));
                 }
                 if entry_type == "Computer"
-                    && can_write_property(&ace, "msds-allowedtoactonbehalfofotheridentity")
+                    || entry_type == "DelegatedMSA"
+                        && can_write_property(&ace, "msds-allowedtoactonbehalfofotheridentity")
                 {
                     relations.push(AceTemplate::new(
                         sid.to_owned(),
@@ -460,7 +462,9 @@ fn ace_maker<T: LdapObject>(
                 }
                 // Since BloodHound 4.1
                 // AddKeyCredentialLink write access
-                if ((entry_type == "User") || (entry_type == "Computer"))
+                if ((entry_type == "User")
+                    || (entry_type == "Computer")
+                    || (entry_type == "DelegatedMSA"))
                     && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
                     && get_schema_map()
                         .get("ms-ds-key-credential-link")
@@ -475,7 +479,9 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-                if ((entry_type == "User") || (entry_type == "Computer"))
+                if ((entry_type == "User")
+                    || (entry_type == "Computer")
+                    || (entry_type == "DelegatedMSA"))
                     && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
                     && get_schema_map()
                         .get("service-principal-name")
@@ -534,7 +540,7 @@ fn ace_maker<T: LdapObject>(
                     "".to_string(),
                 ));
             }
-            if ["User", "Group", "OU", "Computer"].contains(&entry_type)
+            if ["User", "Group", "OU", "Computer", "DelegatedMSA"].contains(&entry_type)
                 && (MaskFlags::ADS_RIGHT_DS_CREATE_CHILD.bits() | mask) == mask
                 && !is_filtered_sid(&sid)
                 && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
@@ -632,7 +638,7 @@ fn ace_maker<T: LdapObject>(
                 //         "".to_string(),
                 //     ));
                 // }
-                if ["User", "Computer", "Group"].contains(&entry_type)
+                if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && has_extended_right(&ace, "user-force-change-password")
                 {
                     relations.push(AceTemplate::new(
@@ -643,7 +649,8 @@ fn ace_maker<T: LdapObject>(
                         "".to_string(),
                     ));
                 }
-                if ["User", "Group", "OU", "Computer", "Domain"].contains(&entry_type)
+                if ["User", "Group", "OU", "Computer", "Domain", "DelegatedMSA"]
+                    .contains(&entry_type)
                     && has_extended_right(&ace, "reanimate-tombstones")
                 {
                     relations.push(AceTemplate::new(
@@ -777,7 +784,7 @@ fn ace_maker<T: LdapObject>(
                     ));
                 }
             }
-            if ["User", "Group", "OU", "Computer"].contains(&entry_type)
+            if ["User", "Group", "OU", "Computer", "DelegatedMSA"].contains(&entry_type)
                 && (MaskFlags::ADS_RIGHT_DS_CREATE_CHILD.bits() | mask) == mask
                 && !is_filtered_sid(&sid)
             {

@@ -1,13 +1,13 @@
 //! Parsing arguments
 #[cfg(not(feature = "noargs"))]
-use clap::{Arg, ArgAction, value_parser, Command};
+use clap::{value_parser, Arg, ArgAction, Command};
 
-#[cfg(feature = "noargs")]
-use winreg::{RegKey,{enums::*}};
 #[cfg(feature = "noargs")]
 use crate::utils::exec::run;
 #[cfg(feature = "noargs")]
 use regex::Regex;
+#[cfg(feature = "noargs")]
+use winreg::{enums::*, RegKey};
 
 #[derive(Clone, Debug)]
 pub struct Options {
@@ -27,7 +27,7 @@ pub struct Options {
     pub zip: bool,
     pub verbose: log::LevelFilter,
     pub ldap_filter: String,
-
+    pub include_dmsas: bool,
     pub cache: bool,
     pub cache_buffer_size: usize,
     pub resume: bool,
@@ -127,7 +127,7 @@ fn cli() -> Command {
         .help("Use custom ldap-filter default is : (objectClass=*)")
         .required(false)
         .value_parser(value_parser!(String))
-        .default_missing_value("(objectClass=*)")
+		.default_missing_value("(objectClass=*)")
     )
     .arg(Arg::new("ldaps")
         .long("ldaps")
@@ -185,13 +185,17 @@ fn cli() -> Command {
         .required(false)
         .action(ArgAction::SetTrue)
         .global(false)
-    )
+    ).arg(Arg::new("include_dmsas")
+		.long("include-dmsas")
+		.help("Include DMSA accounts in a separate file")
+		.required(false)
+		.action(ArgAction::SetTrue)
+		.global(false))
 }
 
 #[cfg(not(feature = "noargs"))]
 /// Function to extract all argument and put it in 'Options' structure.
 pub fn extract_args() -> Options {
-
     // Get arguments
     let matches = cli().get_matches();
 
@@ -210,7 +214,7 @@ pub fn extract_args() -> Options {
         .get_one::<String>("ldapfqdn")
         .map(|s| s.as_str())
         .unwrap_or("not set");
-    let ip = matches.get_one::<String>("ldapip").cloned();    
+    let ip = matches.get_one::<String>("ldapip").cloned();
     let port = match matches.get_one::<String>("ldapport") {
         Some(val) => val.parse::<u16>().ok(),
         None => None,
@@ -248,12 +252,19 @@ pub fn extract_args() -> Options {
         1 => log::LevelFilter::Debug,
         _ => log::LevelFilter::Trace,
     };
-    let collection_method = match matches.get_one::<String>("collectionmethod").map(|s| s.as_str()).unwrap_or("All") {
-        "All"       => CollectionMethod::All,
-        "DCOnly"    => CollectionMethod::DCOnly,
-         _          => CollectionMethod::All,
+    let collection_method = match matches
+        .get_one::<String>("collectionmethod")
+        .map(|s| s.as_str())
+        .unwrap_or("All")
+    {
+        "All" => CollectionMethod::All,
+        "DCOnly" => CollectionMethod::DCOnly,
+        _ => CollectionMethod::All,
     };
-    let ldap_filter = matches.get_one::<String>("ldap-filter").map(|s| s.as_str()).unwrap_or("(objectClass=*)");
+    let ldap_filter = matches
+        .get_one::<String>("ldap-filter")
+        .map(|s| s.as_str())
+        .unwrap_or("(objectClass=*)");
 
     let cache = matches.get_flag("cache");
     let cache_buffer_size = matches
@@ -261,7 +272,7 @@ pub fn extract_args() -> Options {
         .copied()
         .unwrap_or(1000);
     let resume = matches.get_flag("resume");
-
+    let include_dmsas = matches.get_flag("include_dmsas");
     // Return all
     Options {
         domain: d.to_string(),
@@ -283,38 +294,40 @@ pub fn extract_args() -> Options {
         cache,
         cache_buffer_size,
         resume,
+        include_dmsas,
     }
 }
 
 #[cfg(feature = "noargs")]
 /// Function to automatically get all informations needed and put it in 'Options' structure.
 pub fn auto_args() -> Options {
-
     // Request registry key to get informations
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let cur_ver = hklm.open_subkey("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters").unwrap();
+    let cur_ver = hklm
+        .open_subkey("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters")
+        .unwrap();
     //Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Domain
     let domain: String = match cur_ver.get_value("Domain") {
         Ok(domain) => domain,
         Err(err) => {
-            panic!("Error: {:?}",err);
+            panic!("Error: {:?}", err);
         }
     };
-    
+
     // Get LDAP fqdn
-    let _fqdn: String = run(&format!("nslookup -query=srv _ldap._tcp.{}",&domain));
+    let _fqdn: String = run(&format!("nslookup -query=srv _ldap._tcp.{}", &domain));
     let re = Regex::new(r"hostname.*= (?<ldap_fqdn>[0-9a-zA-Z]{1,})").unwrap();
-    let mut values =  re.captures_iter(&_fqdn);
+    let mut values = re.captures_iter(&_fqdn);
     let caps = values.next().unwrap();
     let fqdn = caps["ldap_fqdn"].to_string();
 
     // Get LDAP port
     let re = Regex::new(r"port.*= (?<ldap_port>[0-9]{3,})").unwrap();
-    let mut values =  re.captures_iter(&_fqdn);
+    let mut values = re.captures_iter(&_fqdn);
     let caps = values.next().unwrap();
     let port = match caps["ldap_port"].to_string().parse::<u16>() {
         Ok(x) => Some(x),
-        Err(_) => None
+        Err(_) => None,
     };
     let ldaps: bool = {
         if let Some(p) = port {
@@ -330,7 +343,7 @@ pub fn auto_args() -> Options {
         username: "not set".to_string(),
         password: "not set".to_string(),
         ldapfqdn: fqdn.to_string(),
-        ip: None, 
+        ip: None,
         port: port,
         name_server: "127.0.0.1".to_string(),
         path: "./output".to_string(),

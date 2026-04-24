@@ -136,7 +136,7 @@ pub fn parse_result_type_from_source(
         .iter()
         .filter_map(|e| {
             let se = SearchEntry::from(e.clone());
-            if matches!(get_type(&se), Ok(Type::SchemaEntry)) {
+            if matches!(get_type(&se, &common_args), Ok(Type::SchemaEntry)) {
                 let mut schema_entry = SchemaEntry::new();
                 match SchemaEntry::parse(&mut schema_entry, se) {
                     Ok(()) => Some(schema_entry),
@@ -161,7 +161,7 @@ pub fn parse_result_type_from_source(
     for raw_entry in all_entries {
         let entry: SearchEntry = raw_entry.into();
         // Start parsing with Type matching
-        let atype = get_type(&entry).unwrap_or(Type::Unknown);
+        let atype = get_type(&entry, &common_args).unwrap_or(Type::Unknown);
         match atype {
             Type::User => {
                 let mut user: User = User::new();
@@ -169,9 +169,15 @@ pub fn parse_result_type_from_source(
                 results.users.push(user);
             }
             Type::DelegatedMSA => {
-                let mut dmsa: DelegatedMSA = DelegatedMSA::new();
-                dmsa.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
-                results.dmsas.push(dmsa);
+                if common_args.include_dmsas == true {
+                    let mut dmsa: DelegatedMSA = DelegatedMSA::new();
+                    dmsa.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
+                    results.dmsas.push(dmsa);
+                } else {
+                    let mut user: User = User::new();
+                    user.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
+                    results.users.push(user);
+                }
             }
             Type::Group => {
                 let mut group = Group::new();
