@@ -9,3 +9,4 @@ rusthound-ce*
 *.py
 *.txt
 .idea/*
+rev.py
