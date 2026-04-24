@@ -18,7 +18,7 @@ use crate::objects::{
     rootca::RootCA,
     enterpriseca::EnterpriseCA,
     certtemplate::CertTemplate,
-    inssuancepolicie::IssuancePolicie,
+    issuancepolicy::IssuancePolicy,
 };
 use std::convert::TryInto;
 
@@ -27,7 +27,7 @@ use crate::args::Options;
 use crate::banner::progress_bar;
 use crate::enums::ldaptype::*;
 use crate::enums::regex::{PARSER_MOD_RE1,PARSER_MOD_RE2};
-
+use crate::objects::attribute::SchemaEntry;
 // use crate::modules::adcs::parser::{parse_adcs_ca,parse_adcs_template};
 
 /// Function to get type for object by object
@@ -48,8 +48,8 @@ pub fn parse_result_type(
     vec_rootcas:            &mut Vec<RootCA>,
     vec_enterprisecas:      &mut Vec<EnterpriseCA>,
     vec_certtemplates:      &mut Vec<CertTemplate>,
-    vec_issuancepolicies:   &mut Vec<IssuancePolicie>,
-
+    vec_issuancepolicies:   &mut Vec<IssuancePolicy>,
+    vec_schema_entries:     &mut Vec<SchemaEntry>,
     dn_sid:             &mut HashMap<String, String>,
     sid_type:           &mut HashMap<String, String>,
     fqdn_sid:           &mut HashMap<String, String>,
@@ -239,16 +239,21 @@ pub fn parse_result_type(
                 )?;
                 vec_certtemplates.push(cert_template);
             }
-            Type::IssuancePolicie => {
-                let mut issuance_policie = IssuancePolicie::new();
-                issuance_policie.parse(
+            Type::IssuancePolicy => {
+                let mut issuance_policy = IssuancePolicy::new();
+                issuance_policy.parse(
                     cloneresult,
                     domain,
                     dn_sid,
                     sid_type,
                     &domain_sid
                 )?;
-                vec_issuancepolicies.push(issuance_policie);
+                vec_issuancepolicies.push(issuance_policy);
+            }
+            Type::SchemaEntry => {
+                let mut schema_entry = SchemaEntry::default();
+                schema_entry.parse(cloneresult)?;
+                vec_schema_entries.push(schema_entry);
             }
             Type::Unknown => {
                 let _unknown = parse_unknown(cloneresult, domain);
@@ -256,9 +261,10 @@ pub fn parse_result_type(
         }
         // Manage progress bar
         // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+        // Percentage = 100 x (part / total)
 		count += 1;
-        let pourcentage = 100 * count / total;
-        progress_bar(pb.to_owned(),"Parsing LDAP objects".to_string(),pourcentage.try_into()?,"%".to_string());
+        let percentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Parsing LDAP objects".to_string(),percentage.try_into()?,"%".to_string());
     }
     pb.finish_and_clear();
     info!("Parsing LDAP objects finished!");

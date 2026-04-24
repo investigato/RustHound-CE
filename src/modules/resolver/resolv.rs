@@ -19,21 +19,24 @@ pub async fn resolving_all_fqdn(
    vec_computer:  &[Computer]
 ) {
    info!("Resolving FQDN to IP address started...");
-   for value in fqdn_ip.to_owned()
-   {
-      for i in 0..vec_computer.len()
-      {
-         if (*vec_computer[i].properties().name() == value.0.to_owned()) 
-         && (*vec_computer[i].properties().enabled()) {
-            debug!("Trying to resolve FQDN: {}",value.0.to_string());
+   let fqdn_values: Vec<String> = fqdn_ip.keys().cloned().collect();
+
+   for fqdn in fqdn_values {
+      for computer in vec_computer.iter() {
+         if (computer.properties().name() == &fqdn) && (*computer.properties().enabled()) {
+            debug!("Trying to resolve FQDN: {}", fqdn);
             // Resolve FQDN to IP address
-            let address = resolver(value.0.to_string(),dns_tcp,name_server).await;
+            let address = resolver(fqdn.clone(), dns_tcp, name_server).await;
             if let Some(addr) = address {
-               fqdn_ip.insert(value.0.to_owned().to_string(),addr.to_owned().to_string());
-               info!("IP address for {}: {}",&value.0.to_string().yellow().bold(),&addr.yellow().bold());
+               fqdn_ip.insert(fqdn.clone(), addr.clone());
+               info!(
+                        "IP address for {}: {}",
+                        &fqdn.yellow().bold(),
+                        &addr.yellow().bold()
+                    );
             }
          }
-         continue
+         continue;
       }
    }
    info!("Resolving FQDN to IP address finished!");

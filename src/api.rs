@@ -6,9 +6,10 @@ use ldap3::SearchEntry;
 use crate::{
     args::Options, banner::progress_bar, enums::{get_type, Type, PARSER_MOD_RE1, PARSER_MOD_RE2}, json::{
         checker::check_all_result,
-    }, 
+    },
+    enums::{init_maps},
     objects::{
-        aiaca::AIACA, certtemplate::CertTemplate, common::parse_unknown, computer::Computer, container::Container, domain::Domain, enterpriseca::EnterpriseCA, fsp::Fsp, gpo::Gpo, group::Group, inssuancepolicie::IssuancePolicie, ntauthstore::NtAuthStore, ou::Ou, rootca::RootCA, trust::Trust, user::User
+        aiaca::AIACA, attribute::{build_maps,SchemaEntry}, certtemplate::CertTemplate, common::parse_unknown, computer::Computer, container::Container, domain::Domain, enterpriseca::EnterpriseCA, fsp::Fsp, gpo::Gpo, group::Group, issuancepolicy::IssuancePolicy, ntauthstore::NtAuthStore, ou::Ou, rootca::RootCA, trust::Trust, user::User
     }, 
     storage::{EntrySource}
 };
@@ -29,7 +30,7 @@ pub struct ADResults {
     pub rootcas: Vec<RootCA>,
     pub enterprisecas: Vec<EnterpriseCA>,
     pub certtemplates: Vec<CertTemplate>,
-    pub issuancepolicies: Vec<IssuancePolicie>,
+    pub issuancepolicies: Vec<IssuancePolicy>,
 
     pub mappings: DomainMappings,
 }
@@ -104,14 +105,41 @@ pub fn parse_result_type_from_source(
     let mut domain_sid: String = "DOMAIN_SID".to_owned();
 
     log::info!("Starting the LDAP objects parsing...");
+    // The schema_guids from (CN=Schema,CN=Configuration...) get here late,
+    // but they are needed to fully parse the ACLs. Reason: ACL parsing is inline
+    // for every object so without the GUID mapping available, it is incomplete.
 
+    let all_entries: Vec<crate::ldap::LdapSearchEntry> =
+        source.into_entry_iter().collect::<Result<Vec<_>, _>>()?;
+    // All the schema entries first (both attributeSchema and classSchema)
+    let schema_entries: Vec<SchemaEntry> = all_entries
+        .iter()
+        .filter_map(|e| {
+            let se = SearchEntry::from(e.clone());
+            if matches!(get_type(&se), Ok(Type::SchemaEntry)) {
+                let mut schema_entry = SchemaEntry::new();
+                match SchemaEntry::parse(&mut schema_entry, se) {
+                    Ok(()) => Some(schema_entry),
+                    Err(_) => None,
+                }
+            } else {
+                None
+            }
+        })
+        .collect();
+    log::info!(
+        "Schema finder: {} schema entries found",
+        schema_entries.len()
+    );
+    let (schema_map, property_set_map) = build_maps(schema_entries);
+    init_maps(schema_map, property_set_map);
     let dn_sid = &mut results.mappings.dn_sid;
     let sid_type = &mut results.mappings.sid_type;
     let fqdn_sid = &mut results.mappings.fqdn_sid;
     let fqdn_ip = &mut results.mappings.fqdn_ip;
 
-    for entry in source.into_entry_iter() {
-        let entry: SearchEntry = entry?.into();
+    for raw_entry in all_entries {
+        let entry: SearchEntry = raw_entry.into();
         // Start parsing with Type matching
         let atype = get_type(&entry).unwrap_or(Type::Unknown);
         match atype {
@@ -206,24 +234,26 @@ pub fn parse_result_type_from_source(
                 cert_template.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
                 results.certtemplates.push(cert_template);
             }
-            Type::IssuancePolicie => {
-                let mut issuance_policie = IssuancePolicie::new();
-                issuance_policie.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
-                results.issuancepolicies.push(issuance_policie);
+            Type::IssuancePolicy => {
+                let mut issuance_policy = IssuancePolicy::new();
+                issuance_policy.parse(entry, domain, dn_sid, sid_type, &domain_sid)?;
+                results.issuancepolicies.push(issuance_policy);
             }
+            Type::SchemaEntry => { /* this has already been handled above */ }
             Type::Unknown => {
                 let _unknown = parse_unknown(entry, domain);
             }
         }
         // Manage progress bar
         // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+        // Percentage (%) = 100 x (part / total)
         if let Some(total) = total {
             count += 1;
-            let pourcentage = 100 * count / total;
+            let percentage = 100 * count / total;
             progress_bar(
                 pb.to_owned(),
                 "Parsing LDAP objects".to_string(),
-                pourcentage.try_into()?,
+                percentage.try_into()?,
                 "%".to_string(),
             );
         }

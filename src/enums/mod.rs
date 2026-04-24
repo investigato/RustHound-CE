@@ -34,3 +34,4 @@ pub mod constants;
 pub mod trusts;
 pub mod adcs;
 pub mod regex;
+mod schema_guids;

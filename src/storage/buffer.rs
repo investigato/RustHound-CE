@@ -82,7 +82,7 @@ impl<T> BincodeObjectBuffer<T> {
     }
 }
 
-impl<T: bincode::Decode<()>> BincodeObjectBuffer<T> {
+impl<T: oxicode::Decode<()>> BincodeObjectBuffer<T> {
     pub fn into_reader(
         self,
     ) -> Result<BincodeIterator<T, BufReader<std::fs::File>>, Box<dyn Error>> {
@@ -94,7 +94,7 @@ impl<T: bincode::Decode<()>> BincodeObjectBuffer<T> {
 
 impl<T> Storage<T> for BincodeObjectBuffer<T>
 where
-    T: bincode::Encode,
+    T: oxicode::Encode,
 {
     #[inline]
     fn buffer_mut(&mut self) -> &mut Vec<T> {
@@ -104,10 +104,10 @@ where
     fn flush(&mut self) -> Result<(), Box<dyn Error>> {
         for item in self.buffer.drain(..) {
             self.encode_buffer.clear();
-            bincode::encode_into_std_write(
-                &item,
+            oxicode::encode_into_std_write(
+                item,
                 &mut self.encode_buffer,
-                bincode::config::standard(),
+                oxicode::config::standard(),
             )?;
 
             let len = self.encode_buffer.len() as u32;
