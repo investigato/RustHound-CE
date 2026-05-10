@@ -295,7 +295,8 @@ fn ace_maker<T: LdapObject>(
                     relations.push(AceTemplate::new(
                         sid.to_owned(),
                         "".to_string(),
-                        "AddMember".to_string(),
+                        // "AddMember".to_string(),
+                        "AddOrRemoveMember".to_string(),
                         is_inherited,
                         "".to_string(),
                     ));
@@ -327,6 +328,21 @@ fn ace_maker<T: LdapObject>(
                         sid.to_owned(),
                         "".to_string(),
                         "WriteCommonName".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
+                if ["User", "Computer", "Group"].contains(&entry_type)
+                    && !is_filtered_sid(&sid)
+                    && get_schema_map()
+                        .get("user-account-control")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "WriteUserAccountControl".to_string(),
                         is_inherited,
                         "".to_string(),
                     ));
