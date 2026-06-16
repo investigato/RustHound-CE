@@ -12,7 +12,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c972f367-2cc2-40f9-a777-2f17f28221a9" name="Changes" comment="updating dependencies and adding more instructions to readme">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/enums/acl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/enums/acl.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -175,6 +176,7 @@
       <workItem from="1777584164129" duration="1869000" />
       <workItem from="1777643287967" duration="24000" />
       <workItem from="1777655773176" duration="756000" />
+      <workItem from="1781571492879" duration="1345000" />
     </task>
     <task id="LOCAL-00001" summary="update deps, bincode -&gt; oxicode">
       <option name="closed" value="true" />
@@ -240,7 +242,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781462882247</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="updating dependencies and adding more instructions to readme">
+      <option name="closed" value="true" />
+      <created>1781571611223</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1781571611223</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -280,16 +290,6 @@
           <url>file://$PROJECT_DIR$/src/ldap.rs</url>
           <line>52</line>
           <option name="timeStamp" value="10" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/enums/acl.rs</url>
-          <line>655</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/enums/acl.rs</url>
-          <line>790</line>
-          <option name="timeStamp" value="13" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

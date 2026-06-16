@@ -499,15 +499,46 @@ fn ace_maker<T: LdapObject>(
                     || (entry_type == "DelegatedMSA"))
                     && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
                     && get_schema_map()
+                        .get("altsecurityidentities")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "WriteAltSecurityIdentities".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
+                if ((entry_type == "User")
+                    || (entry_type == "Computer")
+                    || (entry_type == "DelegatedMSA"))
+                    && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
+                    && get_schema_map()
                         .get("service-principal-name")
                         .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
                         .unwrap_or(false)
-                    || PROPERTY_SET_GUID_MAP.get("public-information") == Some(&ace_guid)
+                // || PROPERTY_SET_GUID_MAP.get("public-information") == Some(&ace_guid)
                 {
                     relations.push(AceTemplate::new(
                         sid.to_owned(),
                         "".to_string(),
                         "WriteSPN".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
+                if ((entry_type == "User")
+                    || (entry_type == "Computer")
+                    || (entry_type == "DelegatedMSA"))
+                    && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
+                    && PROPERTY_SET_GUID_MAP.get("public-information") == Some(&ace_guid)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "WritePublicInformation".to_string(),
                         is_inherited,
                         "".to_string(),
                     ));
