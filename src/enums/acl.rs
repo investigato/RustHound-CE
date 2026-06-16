@@ -335,6 +335,21 @@ fn ace_maker<T: LdapObject>(
                 if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
                     && get_schema_map()
+                        .get("user-account-control")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                {
+                    relations.push(AceTemplate::new(
+                        sid.to_owned(),
+                        "".to_string(),
+                        "WriteUserAccountControl".to_string(),
+                        is_inherited,
+                        "".to_string(),
+                    ));
+                }
+                if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
+                    && !is_filtered_sid(&sid)
+                    && get_schema_map()
                         .get("ms-ds-managed-account-preceded-by-link")
                         .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
                         .unwrap_or(false)
