@@ -9,4 +9,6 @@ rusthound-ce*
 *.py
 *.txt
 .idea/*
+.idea/workspace.xml
 *.html
+.idea/workspace.xml
