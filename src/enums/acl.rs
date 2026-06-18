@@ -230,6 +230,7 @@ fn ace_maker<T: LdapObject>(
                             is_inherited,
                             "".to_string(),
                         ));
+                        continue;
                     } else {
                         relations.push(AceTemplate::new(
                             sid.to_owned(),
@@ -261,6 +262,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if (MaskFlags::WRITE_OWNER.bits() | mask) == mask {
                     relations.push(AceTemplate::new(
@@ -270,6 +272,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
             }
 
@@ -291,6 +294,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if entry_type == "Group" && can_write_property(&ace, "member") {
                     relations.push(AceTemplate::new(
@@ -300,6 +304,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
 
                 if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
@@ -316,6 +321,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
@@ -331,6 +337,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
@@ -346,6 +353,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
@@ -361,6 +369,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
@@ -376,6 +385,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
@@ -391,6 +401,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
@@ -406,6 +417,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ["User", "Computer", "Group", "DelegatedMSA"].contains(&entry_type)
                     && !is_filtered_sid(&sid)
@@ -421,6 +433,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if entry_type == "Group"
                     && (&ace_guid
@@ -437,6 +450,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if entry_type == "Computer"
                     || entry_type == "DelegatedMSA"
@@ -449,6 +463,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if entry_type == "Computer"
                     && (&ace_guid
@@ -465,6 +480,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if entry_type == "OU" && can_write_property(&ace, "gplink") {
                     relations.push(AceTemplate::new(
@@ -474,6 +490,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 // Since BloodHound 4.1
                 // AddKeyCredentialLink write access
@@ -493,6 +510,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ((entry_type == "User")
                     || (entry_type == "Computer")
@@ -510,6 +528,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ((entry_type == "User")
                     || (entry_type == "Computer")
@@ -528,6 +547,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ((entry_type == "User")
                     || (entry_type == "Computer")
@@ -542,6 +562,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
             } else if (MaskFlags::ADS_RIGHT_DS_SELF.bits() | mask) == mask
                 && (entry_type == "Group")
@@ -557,6 +578,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
 
             // Property read privileges
@@ -565,18 +587,22 @@ fn ace_maker<T: LdapObject>(
                 && (entry_type == "Computer")
                 && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
                 && object.get_haslaps().to_owned()
-                && get_schema_map()
+                && (get_schema_map()
                     .get("ms-mcs-admpwd")
                     .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
                     .unwrap_or(false)
-                || get_schema_map()
-                    .get("ms-laps-password")
-                    .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
-                    .unwrap_or(false)
-                || get_schema_map()
-                    .get("ms-laps-encryptedpassword")
-                    .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
-                    .unwrap_or(false)
+                    || get_schema_map()
+                        .get("ms-laps-password")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                    || get_schema_map()
+                        .get("ms-laps-encryptedpassword")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false)
+                    || get_schema_map()
+                        .get("ms-laps-encryptedpassword-history")
+                        .map(|bytes| u128::from_le_bytes(*bytes) == ace_guid)
+                        .unwrap_or(false))
             {
                 relations.push(AceTemplate::new(
                     sid.to_owned(),
@@ -585,6 +611,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
             if ["User", "Group", "OU", "Computer", "DelegatedMSA"].contains(&entry_type)
                 && (MaskFlags::ADS_RIGHT_DS_CREATE_CHILD.bits() | mask) == mask
@@ -603,6 +630,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 } else {
                     relations.push(AceTemplate::new(
                         sid.to_owned(),
@@ -611,6 +639,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
             }
             // Extended rights
@@ -627,6 +656,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if (entry_type == "Computer")
                     && (flags & ACE_OBJECT_TYPE_PRESENT != ACE_OBJECT_TYPE_PRESENT)
@@ -639,6 +669,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if (entry_type == "Domain")
                     && has_extended_right(&ace, "ds-replication-get-changes")
@@ -650,6 +681,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if (entry_type == "Domain")
                     && has_extended_right(&ace, "ds-replication-get-changes-all")
@@ -661,6 +693,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if (entry_type == "Domain")
                     && has_extended_right(&ace, "ds-replication-get-changes-in-filtered-set")
@@ -672,6 +705,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 // if (entry_type == "User")
                 //     && has_extended_right(&ace, USER_CHANGE_PASSWORD)
@@ -694,6 +728,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ["User", "Group", "OU", "Computer", "Domain", "DelegatedMSA"]
                     .contains(&entry_type)
@@ -706,6 +741,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
 
                 if ["EnterpriseCA", "RootCA", "CertTemplate"].contains(&entry_type)
@@ -718,6 +754,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
                 if ["EnterpriseCA", "RootCA", "CertTemplate"].contains(&entry_type)
                     && has_extended_right(&ace, "certificate-autoenrollment")
@@ -729,6 +766,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
             }
         }
@@ -765,6 +803,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
             if (MaskFlags::WRITE_OWNER.bits() | mask) == mask {
                 relations.push(AceTemplate::new(
@@ -774,6 +813,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
             // For users and domain, check extended rights
             if ((entry_type == "User") || (entry_type == "Domain"))
@@ -786,6 +826,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
             // For computer
             if (entry_type == "Computer")
@@ -799,6 +840,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
             if (MaskFlags::WRITE_DACL.bits() | mask) == mask {
                 relations.push(AceTemplate::new(
@@ -808,6 +850,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
             // Self add, also possible ad ACCESS_ALLOWED_ACE
             // Thanks to bh-py: <https://github.com/dirkjanm/BloodHound.py/blob/d47e765fd3d0356e2e4b48d0d9a0841525194c64/bloodhound/enumeration/acls.py#L221C1-L225C97>
@@ -820,6 +863,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 } else {
                     relations.push(AceTemplate::new(
                         sid.to_owned(),
@@ -828,6 +872,7 @@ fn ace_maker<T: LdapObject>(
                         is_inherited,
                         "".to_string(),
                     ));
+                    continue;
                 }
             }
             if ["User", "Group", "OU", "Computer", "DelegatedMSA"].contains(&entry_type)
@@ -841,6 +886,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
 
             if ["EnterpriseCA"].contains(&entry_type) // "RootCA"
@@ -853,6 +899,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
             if ["EnterpriseCA", "RootCA"].contains(&entry_type)
                 && (MaskFlags::MANAGE_CERTIFICATES.bits() | mask) == mask
@@ -864,6 +911,7 @@ fn ace_maker<T: LdapObject>(
                     is_inherited,
                     "".to_string(),
                 ));
+                continue;
             }
         }
     }

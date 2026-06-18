@@ -35,7 +35,7 @@ pub fn get_type(result: &SearchEntry, common_args: &Options) -> std::result::Res
     if let Some(vals) = object_class_vals {
         match () {
             _ if contains(vals, "msDS-DelegatedManagedServiceAccount") => {
-                if common_args.include_dmsas == true {
+                if common_args.include_dmsas {
                     return Ok(Type::DelegatedMSA);
                 } else {
                     return Ok(Type::User);

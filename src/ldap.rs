@@ -20,12 +20,12 @@ use indicatif::ProgressBar;
 use ldap3::adapters::{Adapter, EntriesOnly};
 use ldap3::{adapters::PagedResults, controls::RawControl, LdapConnAsync, LdapConnSettings};
 use ldap3::{Scope, SearchEntry};
-use log::{info, debug, error, trace};
-use std::io::{self, Write, stdin};
+use log::{debug, error, info, trace};
+use oxicode::{Decode, Encode};
 use std::collections::HashMap;
 use std::error::Error;
+use std::io::{self, stdin, Write};
 use std::process;
-use oxicode::{Decode, Encode};
 /// Function to request all AD values.
 #[allow(clippy::too_many_arguments)]
 pub async fn ldap_search<S: Storage<LdapSearchEntry>>(
@@ -121,18 +121,29 @@ pub async fn ldap_search<S: Storage<LdapSearchEntry>>(
             };
             // Setting control flag LDAP_SERVER_SHOW_DELETED_OID to include tombstoned objects
             // Required for ReanimateTombstones parsing
-            let show_deleted_ctrl=RawControl {
-                ctype:String::from("1.2.840.113556.1.4.417"),
-                crit:true,
+            let show_deleted_ctrl = RawControl {
+                ctype: String::from("1.2.840.113556.1.4.417"),
+                crit: true,
                 val: None,
             };
 
-            let show_deactivated_link_ctrl=RawControl{
-                ctype:String::from("1.2.840.113556.1.4.2065"),
-                crit:true,
+            let show_deactivated_link_ctrl = RawControl {
+                ctype: String::from("1.2.840.113556.1.4.2065"),
+                crit: true,
                 val: None,
             };
-            ldap.with_controls(vec![sec_desc_flag_ctrl.to_owned(),show_deleted_ctrl.to_owned(),show_deactivated_link_ctrl.to_owned()]);
+
+            let show_recycled_ctrl = RawControl {
+                ctype: String::from("1.2.840.113556.1.4.2064"),
+                crit: true,
+                val: None,
+            };
+            ldap.with_controls(vec![
+                sec_desc_flag_ctrl.to_owned(),
+                show_deleted_ctrl.to_owned(),
+                show_deactivated_link_ctrl.to_owned(),
+                show_recycled_ctrl.to_owned(),
+            ]);
             // ldap.with_controls(ctrls.to_owned());
 
             // Prepare filter
@@ -214,7 +225,6 @@ pub async fn ldap_search<S: Storage<LdapSearchEntry>>(
 
     storage.flush()?;
 
-
     // Return the vector with the result
     Ok(total)
 }
@@ -289,16 +299,16 @@ fn ldap_constructor(
     }
 
     // Print infos if verbose mod is set
-    debug!("IP: {}", match ip {
-        Some(ip) => ip,
-        None => "not set"
-    });
-    debug!("PORT: {}", match port {
-        Some(p) => {
-            p.to_string()
-        },
-        None => "not set".to_owned()
-    });
+    debug!("IP: {}", ip.unwrap_or("not set"));
+    debug!(
+        "PORT: {}",
+        match port {
+            Some(p) => {
+                p.to_string()
+            }
+            None => "not set".to_owned(),
+        }
+    );
     debug!("FQDN: {}", ldapfqdn);
     debug!("Url: {}", s_url);
     debug!("Domain: {}", domain);
@@ -318,22 +328,14 @@ fn ldap_constructor(
 }
 
 /// Function to prepare LDAP url.
-fn prepare_ldap_url(
-    ldaps: bool,
-    ip: Option<&str>,
-    port: Option<u16>,
-    domain: &str
-) -> String {
+fn prepare_ldap_url(ldaps: bool, ip: Option<&str>, port: Option<u16>, domain: &str) -> String {
     let protocol = if ldaps || port.unwrap_or(0) == 636 {
         "ldaps"
     } else {
         "ldap"
     };
 
-    let target = match ip {
-        Some(ip) => ip,
-        None => domain,
-    };
+    let target = ip.unwrap_or_else(|| domain);
 
     match port {
         Some(port) => {
@@ -347,7 +349,6 @@ fn prepare_ldap_url(
 
 /// Function to prepare LDAP DC from DOMAIN.LOCAL
 pub fn prepare_ldap_dc(domain: &str) -> Vec<String> {
-
     let mut dc: String = "".to_owned();
     let mut naming_context: Vec<String> = Vec::new();
 
@@ -356,13 +357,12 @@ pub fn prepare_ldap_dc(domain: &str) -> Vec<String> {
         dc.push_str("DC=");
         dc.push_str(domain);
         naming_context.push(dc[..].to_string());
-    }
-    else {
+    } else {
         naming_context.push(domain_to_dc(domain));
     }
 
     // For ADCS values
-    naming_context.push(format!("{}{}", "CN=Configuration,", &dc[..])); 
+    naming_context.push(format!("{}{}", "CN=Configuration,", &dc[..]));
     naming_context
 }
 
@@ -376,11 +376,17 @@ async fn gssapi_connection(
     let res = ldap.sasl_gssapi_bind(ldapfqdn).await?.success();
     match res {
         Ok(_res) => {
-            info!("Connected to {} Active Directory!", domain.to_uppercase().bold().green());
+            info!(
+                "Connected to {} Active Directory!",
+                domain.to_uppercase().bold().green()
+            );
             info!("Starting data collection...");
         }
         Err(err) => {
-            error!("Failed to authenticate to {} Active Directory. Reason: {err}\n", domain.to_uppercase().bold().red());
+            error!(
+                "Failed to authenticate to {} Active Directory. Reason: {err}\n",
+                domain.to_uppercase().bold().red()
+            );
             process::exit(0x0100);
         }
     }
@@ -389,7 +395,7 @@ async fn gssapi_connection(
 
 /// (Not needed yet) Get all namingContext for DC
 pub async fn get_all_naming_contexts(
-    ldap: &mut ldap3::Ldap
+    ldap: &mut ldap3::Ldap,
 ) -> Result<Vec<String>, Box<dyn Error>> {
     // Every 999 max value in ldap response (err 4 ldap)
     let adapters: Vec<Box<dyn Adapter<_, _>>> = vec![
@@ -398,13 +404,15 @@ pub async fn get_all_naming_contexts(
     ];
 
     // First LDAP request to get all namingContext
-    let mut search = ldap.streaming_search_with(
-        adapters,
-        "", 
-        Scope::Base,
-        "(objectClass=*)",
-        vec!["namingContexts"],
-    ).await?;
+    let mut search = ldap
+        .streaming_search_with(
+            adapters,
+            "",
+            Scope::Base,
+            "(objectClass=*)",
+            vec!["namingContexts"],
+        )
+        .await?;
 
     // Prepare LDAP result vector
     let mut rs: Vec<SearchEntry> = Vec::new();
@@ -422,14 +430,14 @@ pub async fn get_all_naming_contexts(
             for result in rs {
                 let result_attrs: HashMap<String, Vec<String>> = result.attrs;
 
-                for (_key, value) in &result_attrs {
+                for value in result_attrs.values() {
                     for naming_context in value {
-                        debug!("namingContext found: {}",&naming_context.bold().green());
+                        debug!("namingContext found: {}", &naming_context.bold().green());
                         naming_contexts.push(naming_context.to_string());
                     }
                 }
             }
-            return Ok(naming_contexts)
+            return Ok(naming_contexts);
         }
         Err(err) => {
             error!("No namingContexts found! Reason: {err}");

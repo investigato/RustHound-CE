@@ -1,19 +1,21 @@
-use serde_json::value::Value;
-use serde::{Deserialize, Serialize};
 use colored::Colorize;
 use ldap3::SearchEntry;
-use log::{info, debug, trace};
+use log::{debug, info, trace};
+use serde::{Deserialize, Serialize};
+use serde_json::value::Value;
 use std::collections::HashMap;
 use std::error::Error;
 
-use crate::enums::{OBJECT_SID_RE1, SID_PART1_RE1};
-use crate::objects::common::{LdapObject, Session, AceTemplate, Member, SPNTarget, LocalGroup, Link, DCRegistryData};
-use crate::utils::date::{convert_timestamp,string_to_epoch};
-use crate::utils::crypto::convert_encryption_types;
 use crate::enums::acl::parse_ntsecuritydescriptor;
 use crate::enums::secdesc::LdapSid;
 use crate::enums::sid::sid_maker;
 use crate::enums::uacflags::get_flag;
+use crate::enums::{OBJECT_SID_RE1, SID_PART1_RE1};
+use crate::objects::common::{
+    AceTemplate, DCRegistryData, LdapObject, Link, LocalGroup, Member, SPNTarget, Session,
+};
+use crate::utils::crypto::convert_encryption_types;
+use crate::utils::date::{convert_timestamp, string_to_epoch};
 
 use super::common::UserRight;
 
@@ -43,7 +45,7 @@ pub struct Computer {
     has_sid_history: Vec<String>,
     #[serde(rename = "DumpSMSAPassword")]
     dump_smsa_password: Vec<Member>,
-    
+
     #[serde(rename = "Sessions")]
     sessions: Session,
     #[serde(rename = "PrivilegedSessions")]
@@ -70,8 +72,10 @@ pub struct Computer {
 
 impl Computer {
     // New computer.
-    pub fn new() -> Self { 
-        Self { ..Default::default() } 
+    pub fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
     }
 
     // Immutable access.
@@ -100,7 +104,7 @@ impl Computer {
         sid_type: &mut HashMap<String, String>,
         fqdn_sid: &mut HashMap<String, String>,
         fqdn_ip: &mut HashMap<String, String>,
-        domain_sid: &str
+        domain_sid: &str,
     ) -> Result<(), Box<dyn Error>> {
         let result_dn: String = result.dn.to_uppercase();
         let result_attrs: HashMap<String, Vec<String>> = result.attrs;
@@ -135,7 +139,7 @@ impl Computer {
             match key.as_str() {
                 "name" => {
                     let name = &value[0];
-                    let email = format!("{}.{}",name.to_owned(),domain);
+                    let email = format!("{}.{}", name.to_owned(), domain);
                     self.properties.name = email.to_uppercase();
                 }
                 "sAMAccountName" => {
@@ -223,7 +227,7 @@ impl Computer {
                         if flag.contains("PasswordNotRequired") {
                             self.properties.passwordnotreqd = true;
                         };
-                         if flag.contains("DontExpirePassword") {
+                        if flag.contains("DontExpirePassword") {
                             self.properties.pwdneverexpires = true;
                         };
                         if flag.contains("ServerTrustAccount") {
@@ -232,7 +236,7 @@ impl Computer {
                         }
                     }
                 }
-                "msDS-AllowedToDelegateTo"  => {
+                "msDS-AllowedToDelegateTo" => {
                     // KCD (Kerberos Constrained Delegation)
                     //trace!(" AllowToDelegateTo: {:?}",&value);
                     // AllowedToDelegate
@@ -243,14 +247,18 @@ impl Computer {
                         let fqdn = split.collect::<Vec<&str>>()[1];
                         let mut checker = false;
                         for member in &vec_members2 {
-                            if member.object_identifier().contains(fqdn.to_uppercase().as_str()) {
+                            if member
+                                .object_identifier()
+                                .contains(fqdn.to_uppercase().as_str())
+                            {
                                 checker = true;
                             }
                         }
                         if !checker {
-                            *member_allowed_to_delegate.object_identifier_mut() = fqdn.to_uppercase().to_owned().to_uppercase();
+                            *member_allowed_to_delegate.object_identifier_mut() =
+                                fqdn.to_uppercase().to_owned().to_uppercase();
                             *member_allowed_to_delegate.object_type_mut() = "Computer".to_owned();
-                            vec_members2.push(member_allowed_to_delegate.to_owned()); 
+                            vec_members2.push(member_allowed_to_delegate.to_owned());
                         }
                     }
                     // *properties.allowedtodelegate = vec_members2.to_owned();
@@ -281,31 +289,16 @@ impl Computer {
                     );
                     self.properties.haslaps = true;
                 }
-                "msLAPS-EncryptedPassword" => {
-                    info!(
-                        "Your user can decrypt LAPS v2 passwords on {} please check manually to decrypt it!",
-                        &result_attrs["name"][0].yellow().bold()
-                    );
-                    self.properties.haslaps = true;
-                }
+
                 "msLAPS-PasswordExpirationTime" => {
                     // LAPS is set, random password for local administrator
-                    self.properties.haslaps = true;
-                }
-                "msLAPS-EncryptedPasswordHistory" => {
-                    info!(
-                        "Your user can read decrypted LAPS v2 password history on {} please check manually to decrypt it!",
+					info!(
+                        "Computer {} has Windows LAPS v2 enabled",
                         &result_attrs["name"][0].yellow().bold()
                     );
                     self.properties.haslaps = true;
                 }
-                "msLAPS-EncryptedDSRMPassword" => {
-                    info!(
-                        "Your user can read decrypted LAPS v2 DSRM password on {} please check manually to decrypt it!",
-                        &result_attrs["name"][0].yellow().bold()
-                    );
-                    self.properties.haslaps = true;
-                }
+
                 "primaryGroupID" => {
                     group_id = value[0].to_owned();
                 }
@@ -313,8 +306,9 @@ impl Computer {
                     self.is_deleted = true;
                 }
                 "msDS-SupportedEncryptionTypes" => {
-                    self.properties.supportedencryptiontypes = convert_encryption_types(value[0].parse::<i32>().unwrap_or(0));
-                 }
+                    self.properties.supportedencryptiontypes =
+                        convert_encryption_types(value[0].parse::<i32>().unwrap_or(0));
+                }
                 _ => {}
             }
         }
@@ -343,6 +337,27 @@ impl Computer {
                     );
                     self.aces = relations_ace;
                 }
+                "msLAPS-EncryptedPassword" => {
+                    info!(
+                        "Your user can read LAPS v2 passwords on {} please check manually to decrypt it!",
+                        &result_attrs["name"][0].yellow().bold()
+                    );
+                    self.properties.haslaps = true;
+                }
+                "msLAPS-EncryptedPasswordHistory" => {
+                    info!(
+                        "Your user can read LAPS v2 password history on {} please check manually to decrypt it!",
+                        &result_attrs["name"][0].yellow().bold()
+                    );
+                    self.properties.haslaps = true;
+                }
+                "msLAPS-EncryptedDSRMPassword" => {
+                    info!(
+                        "Your user can read LAPS v2 DSRM password on {} please check manually to decrypt it!",
+                        &result_attrs["name"][0].yellow().bold()
+                    );
+                    self.properties.haslaps = true;
+                }
                 "msDS-AllowedToActOnBehalfOfOtherIdentity" => {
                     // RBCD (Resource-based constrained)
                     // msDS-AllowedToActOnBehalfOfOtherIdentity parsing ACEs
@@ -360,9 +375,10 @@ impl Computer {
                         //trace!("msDS-AllowedToActOnBehalfOfOtherIdentity => ACE: {:?}",delegated);
                         // delegated["RightName"] == "Owner" => continue
                         if *delegated.right_name() == "GenericAll" {
-                            *allowed_to_act.object_identifier_mut() = delegated.principal_sid().to_string();
-                            vec_members_allowtoact.push(allowed_to_act.to_owned()); 
-                            continue
+                            *allowed_to_act.object_identifier_mut() =
+                                delegated.principal_sid().to_string();
+                            vec_members_allowtoact.push(allowed_to_act.to_owned());
+                            continue;
                         }
                     }
                     self.allowed_to_act = vec_members_allowtoact;
@@ -385,23 +401,16 @@ impl Computer {
         dn_sid.insert(
             self.properties.distinguishedname.to_string(),
             self.object_identifier.to_string(),
-
         );
         // Push DN and Type
-        sid_type.insert(
-            self.object_identifier.to_string(),
-            "Computer".to_string(),
-        );
+        sid_type.insert(self.object_identifier.to_string(), "Computer".to_string());
 
         fqdn_sid.insert(
             self.properties.name.to_string(),
             self.object_identifier.to_string(),
         );
 
-        fqdn_ip.insert(
-            self.properties.name.to_string(),
-            String::from(""),
-        );
+        fqdn_ip.insert(self.properties.name.to_string(), String::from(""));
 
         // Trace and return Computer struct
         // trace!("JSON OUTPUT: {:?}",serde_json::to_string(&self).unwrap());
@@ -443,7 +452,7 @@ impl LdapObject for Computer {
     fn get_haslaps(&self) -> &bool {
         &self.properties.haslaps
     }
-    
+
     // Get mutable values
     fn get_aces_mut(&mut self) -> &mut Vec<AceTemplate> {
         &mut self.aces
@@ -454,7 +463,7 @@ impl LdapObject for Computer {
     fn get_allowed_to_delegate_mut(&mut self) -> &mut Vec<Member> {
         &mut self.allowed_to_delegate
     }
-  
+
     // Edit values
     fn set_is_acl_protected(&mut self, is_acl_protected: bool) {
         self.is_acl_protected = is_acl_protected;
@@ -495,7 +504,7 @@ pub struct ComputerProperties {
     whencreated: i64,
     enabled: bool,
     unconstraineddelegation: bool,
-    trustedtoauth: bool,  
+    trustedtoauth: bool,
     lastlogon: i64,
     lastlogontimestamp: i64,
     pwdlastset: i64,
@@ -506,10 +515,10 @@ pub struct ComputerProperties {
     sidhistory: Vec<String>,
     supportedencryptiontypes: Vec<String>,
     #[serde(skip_serializing)]
-    is_dc: bool
+    is_dc: bool,
 }
 
-impl ComputerProperties {  
+impl ComputerProperties {
     // Immutable access.
     pub fn name(&self) -> &String {
         &self.name
