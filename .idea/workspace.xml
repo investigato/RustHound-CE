@@ -11,7 +11,7 @@
     </cargoProject>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c972f367-2cc2-40f9-a777-2f17f28221a9" name="Changes" comment="updating dependencies and adding more instructions to readme">
+    <list default="true" id="c972f367-2cc2-40f9-a777-2f17f28221a9" name="Changes" comment="gitignore remove duplicates">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/enums/acl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/enums/acl.rs" afterDir="false" />
     </list>
@@ -59,36 +59,38 @@
     <option name="openDirectoriesWithSingleClick" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Cargo.Run rusthound-ce.executor&quot;: &quot;Debug&quot;,
-    &quot;Cargo.checkpoint.executor&quot;: &quot;Debug&quot;,
-    &quot;Cargo.critical.executor&quot;: &quot;Debug&quot;,
-    &quot;Cargo.sentinel.executor&quot;: &quot;Debug&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/mnt/terrorbyte/arsenal/rcat&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
-    &quot;org.rust.first.attach.projects&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;dynamic.analysis.tools.valgrind&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Run rusthound-ce.executor": "Debug",
+    "Cargo.checkpoint.executor": "Debug",
+    "Cargo.critical.executor": "Debug",
+    "Cargo.novaforge.executor": "Debug",
+    "Cargo.sentinel.executor": "Debug",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/mnt/terrorbyte/projects/apps/sharkbytes-rs",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "org.rust.first.attach.projects": "true",
+    "settings.editor.selected.configurable": "dynamic.analysis.tools.valgrind",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/objects" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.checkpoint">
+  <component name="RunManager" selected="Cargo.novaforge">
     <configuration name="Test rusthound-ce" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test --workspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -106,14 +108,11 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="checkpoint" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <configuration name="novaforge" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
-      <option name="command" value="run --package rusthound-ce --bin rusthound-ce -- --kerberos -f dc01.checkpoint.htb -d checkpoint.htb -c All -o . -z" />
+      <option name="command" value="run --package rusthound-ce --bin rusthound-ce -- -u john.doe -p johndoe1369 -f dc.novaforge.local -d novaforge.local -c All -o . -z" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs>
-        <env name="KRB5_CONFIG" value="$PROJECT_DIR$/../../../ctf/htb/checkpoint/krb5.conf" />
-        <env name="KRB5CCNAME" value="$PROJECT_DIR$/../../../ctf/htb/checkpoint/alex.turner.ccache" />
-      </envs>
+      <envs />
       <option name="emulateTerminal" value="true" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -150,7 +149,7 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Test rusthound-ce" />
-      <item itemvalue="Cargo.checkpoint" />
+      <item itemvalue="Cargo.novaforge" />
       <item itemvalue="Cargo.sentinel" />
     </list>
   </component>
@@ -177,6 +176,9 @@
       <workItem from="1777643287967" duration="24000" />
       <workItem from="1777655773176" duration="756000" />
       <workItem from="1781571492879" duration="1345000" />
+      <workItem from="1781782213480" duration="701000" />
+      <workItem from="1782341661128" duration="29000" />
+      <workItem from="1783180242838" duration="1435000" />
     </task>
     <task id="LOCAL-00001" summary="update deps, bincode -&gt; oxicode">
       <option name="closed" value="true" />
@@ -285,11 +287,6 @@
           <url>file://$PROJECT_DIR$/src/enums/ldaptype.rs</url>
           <line>37</line>
           <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/ldap.rs</url>
-          <line>52</line>
-          <option name="timeStamp" value="10" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -613,7 +613,15 @@ fn ace_maker<T: LdapObject>(
                 ));
                 continue;
             }
-            if ["User", "Group", "OU", "Computer", "DelegatedMSA"].contains(&entry_type)
+            if [
+                "User",
+                "Group",
+                "OU",
+                "Computer",
+                "Container",
+                "DelegatedMSA",
+            ]
+            .contains(&entry_type)
                 && (MaskFlags::ADS_RIGHT_DS_CREATE_CHILD.bits() | mask) == mask
                 && !is_filtered_sid(&sid)
                 && (flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
@@ -875,7 +883,15 @@ fn ace_maker<T: LdapObject>(
                     continue;
                 }
             }
-            if ["User", "Group", "OU", "Computer", "DelegatedMSA"].contains(&entry_type)
+            if [
+                "User",
+                "Group",
+                "OU",
+                "Computer",
+                "Container",
+                "DelegatedMSA",
+            ]
+            .contains(&entry_type)
                 && (MaskFlags::ADS_RIGHT_DS_CREATE_CHILD.bits() | mask) == mask
                 && !is_filtered_sid(&sid)
             {
